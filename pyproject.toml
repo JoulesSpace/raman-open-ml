@@ -26,6 +26,8 @@ dev = ["pytest>=8.0", "ruff>=0.8"]
 tuning = ["optuna>=4.0"]      # Bayesian HPO in raman_ml.tuning
 xai = ["shap>=0.44"]          # SHAP explainability in raman_ml.interpretability
 viz = ["umap-learn>=0.5"]     # UMAP embedding in raman_ml.dimensionality_reduction
+gen = ["tabgan>=3.2"]         # tabular synthesizers for the generative-augmentation benchmark
+                              # (the 1-D conv GAN/diffusion in raman_ml.generative need only torch)
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -10,6 +10,7 @@ from . import (  # noqa: F401
     calibration_transfer,
     datasets,
     dimensionality_reduction,
+    generative,
     interpretability,
     models,
     ood,
@@ -22,6 +23,6 @@ from . import (  # noqa: F401
 )
 
 __all__ = ["augment", "calibration_transfer", "datasets",
-           "dimensionality_reduction", "interpretability", "models", "ood",
-           "peaks", "preprocessing", "ssl", "tuning", "uncertainty",
-           "variable_selection"]
+           "dimensionality_reduction", "generative", "interpretability",
+           "models", "ood", "peaks", "preprocessing", "ssl", "tuning",
+           "uncertainty", "variable_selection"]

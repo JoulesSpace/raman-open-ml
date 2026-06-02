@@ -192,6 +192,30 @@ def test_deep_ensemble_classifier_runs():
     assert np.allclose(proba.sum(1), 1.0, atol=1e-5)
 
 
+def test_generative_samplers_shapes_and_finite():
+    from raman_ml.generative import (
+        PCAGaussian,
+        SpectralDiffusion,
+        SpectralGAN,
+        random_resample_balanced,
+    )
+    X, y = _two_class_data(n=64, L=64)
+    # statistical baselines
+    Xr, yr = random_resample_balanced(X, y, per_class=5, jitter=0.01, seed=0)
+    assert Xr.shape == (10, 64) and set(yr) == {0, 1}
+    Xg, yg = PCAGaussian(n_classes=2, n_components=8, seed=0).fit(
+        X, y).generate_balanced(5)
+    assert Xg.shape == (10, 64) and np.isfinite(Xg).all()
+    # the two deep generators (tiny configs for speed)
+    diff = SpectralDiffusion(n_classes=2, timesteps=8, epochs=2, base=16,
+                             n_blocks=2, seed=0).fit(X, y)
+    Xd, yd = diff.generate_balanced(3)
+    assert Xd.shape == (6, 64) and np.isfinite(Xd).all()
+    gan = SpectralGAN(n_classes=2, epochs=2, n_critic=1, base=16, seed=0).fit(X, y)
+    Xq, yq = gan.generate_balanced(3)
+    assert Xq.shape == (6, 64) and np.isfinite(Xq).all()
+
+
 def test_weighted_ensemble_regressor():
     from sklearn.ensemble import RandomForestRegressor
     from sklearn.linear_model import LinearRegression

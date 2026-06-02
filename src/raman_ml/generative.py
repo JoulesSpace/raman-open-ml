@@ -169,8 +169,9 @@ class SpectralDiffusion:
                 loss.backward()
                 opt.step()
                 running += loss.item() * x0.shape[0]
+            self.final_loss_ = running / n
             if self.verbose and (ep % 50 == 0 or ep == self.epochs - 1):
-                print(f"  diffusion epoch {ep:4d}  loss={running / n:.4f}")
+                print(f"  diffusion epoch {ep:4d}  loss={self.final_loss_:.4f}")
         return self
 
     @torch.no_grad()
@@ -320,8 +321,9 @@ class SpectralGAN:
                 og.zero_grad()
                 g_loss.backward()
                 og.step()
+            self.final_critic_loss_ = d_running / max(1, n)
             if self.verbose and (ep % 50 == 0 or ep == self.epochs - 1):
-                print(f"  gan epoch {ep:4d}  critic_loss={d_running / max(1, n):.3f}")
+                print(f"  gan epoch {ep:4d}  critic_loss={self.final_critic_loss_:.3f}")
         return self
 
     @torch.no_grad()

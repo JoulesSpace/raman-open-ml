@@ -60,7 +60,8 @@ from raman_ml.preprocessing import l2_normalize  # noqa: E402
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS_DIR = os.path.join(_ROOT, "benchmarks", "results")
 PLOTS_DIR = os.path.join(_ROOT, "benchmarks", "plots")
-CONV = ("WGAN-GP (1D conv)", "diffusion (1D conv)")  # our models, for plot highlight
+CONV = ("WGAN-GP (1D conv)", "diffusion (1D conv)",
+        "classical + WGAN-GP", "classical + diffusion")  # our conv models, for highlight
 
 
 def _few_shot(X, y, shots, seed):
@@ -132,7 +133,8 @@ def main():
         print(f"  {name:24s} acc={acc:.3f}  macroF1={f1:.3f}  (n_train={n_tr})")
 
     add("real only", None, None)
-    add("classical aug", *_classical_aug(Xfs_n, yfs, args.gen, args.seed))
+    Xca, yca = _classical_aug(Xfs_n, yfs, args.gen, args.seed)
+    add("classical aug", Xca, yca)
 
     # --- tabgan family, in PCA space ---
     if not args.no_tabgan:
@@ -161,7 +163,8 @@ def main():
     # --- purpose-built 1-D conv models, full resolution ---
     t0 = time.time()
     gan = SpectralGAN(n_classes, epochs=args.epochs, seed=args.seed, verbose=True).fit(Xfs_n, yfs)
-    add("WGAN-GP (1D conv)", *gan.generate_balanced(args.gen))
+    Xgan, ygan = gan.generate_balanced(args.gen)
+    add("WGAN-GP (1D conv)", Xgan, ygan)
     print(f"    [WGAN-GP in {time.time() - t0:.0f}s]")
 
     t0 = time.time()
@@ -171,6 +174,10 @@ def main():
     diff_syn = (Xdf, ydf)
     add("diffusion (1D conv)", Xdf, ydf)
     print(f"    [diffusion in {time.time() - t0:.0f}s]")
+
+    # --- stacked: classical augmentation + a generative model on top ---
+    add("classical + WGAN-GP", np.vstack([Xca, Xgan]), np.concatenate([yca, ygan]))
+    add("classical + diffusion", np.vstack([Xca, Xdf]), np.concatenate([yca, ydf]))
 
     import pandas as pd
     df = pd.DataFrame(results)

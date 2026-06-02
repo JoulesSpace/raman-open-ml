@@ -1,0 +1,2 @@
+members,single_mean_acc,single_std,ensemble_acc,ensemble_macro_f1,ece_before,ece_after,conformal_coverage,conformal_set_size,lit_Ho,lit_SANet,lit_SE-ResNet
+8,0.8423333333333334,0.004708148963941867,0.8623333333333333,0.8590151928884017,0.07348578167955082,0.02506778385572885,0.938,1.3936666666666666,0.822,0.861,0.878

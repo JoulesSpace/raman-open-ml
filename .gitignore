@@ -1,0 +1,22 @@
+# Datasets are downloaded, never committed (large + separately licensed)
+data/bacteria_id/
+data/polystyrene/
+*.npy
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+
+# Keep results small; comment out to version plots/metrics
+# results/
+
+# OS / editor
+.DS_Store
+.idea/
+.ipynb_checkpoints/

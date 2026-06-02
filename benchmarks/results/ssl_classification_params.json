@@ -1,0 +1,8 @@
+{
+  "members": 2,
+  "pretrain_epochs": 1,
+  "finetune_epochs": 1,
+  "base": 16,
+  "tta": 1,
+  "seed": 0
+}

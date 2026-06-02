@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "raman-open-ml"
+version = "0.1.0"
+description = "Trustworthy, reproducible ML for Raman spectroscopy: classification, quantification, uncertainty, open-set/OOD, and calibration transfer on open data."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "raman-open-ml contributors" }]
+keywords = ["raman", "spectroscopy", "machine-learning", "conformal-prediction",
+            "out-of-distribution", "calibration-transfer", "chemometrics"]
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.0",
+    "scipy>=1.11",
+    "scikit-learn>=1.4",
+    "matplotlib>=3.7",
+    "torch>=2.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.8"]
+tuning = ["optuna>=4.0"]      # Bayesian HPO in raman_ml.tuning
+xai = ["shap>=0.44"]          # SHAP explainability in raman_ml.interpretability
+viz = ["umap-learn>=0.5"]     # UMAP embedding in raman_ml.dimensionality_reduction
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = ["data", "benchmarks"]
+
+[tool.ruff.lint]
+# pyflakes, pycodestyle, isort, bugbear, comprehensions, pyupgrade
+select = ["E", "F", "I", "B", "C4", "UP"]
+ignore = ["E741"]  # ambiguous var names (l, I) are fine for math code
+
+[tool.ruff.lint.per-file-ignores]
+# runner/diagnostic scripts and tests favour compact, readable lines:
+# E402 (sys.path tweak before imports), E702 (occasional `a; b`),
+# C408 (dict(...) calls read better than {...} for metric rows).
+"scripts/*" = ["E402", "E702", "C408"]
+"tests/*" = ["E402", "E702", "C408"]

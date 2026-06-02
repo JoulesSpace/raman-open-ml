@@ -1,0 +1,2 @@
+temperature,ece_before,ece_after,conformal_coverage,conformal_set_size,alpha
+1.2676004522270956,0.14369503465074118,0.045979796134197864,0.918,14.849666666666666,0.1

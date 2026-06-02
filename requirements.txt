@@ -1,0 +1,11 @@
+# Tested with Python 3.12 and the versions noted below.
+numpy>=1.26
+pandas>=2.0
+scipy>=1.11
+scikit-learn>=1.4
+matplotlib>=3.7
+torch>=2.0        # CPU build works; CUDA build auto-used if a GPU is present
+pytest>=8.0       # dev: run `pytest -q`
+optuna>=4.0       # optional: Bayesian hyperparameter tuning (raman_ml.tuning method="bayes")
+shap>=0.44        # optional: SHAP explainability (raman_ml.interpretability.shap_*)
+umap-learn>=0.5   # optional: UMAP embedding in raman_ml.dimensionality_reduction

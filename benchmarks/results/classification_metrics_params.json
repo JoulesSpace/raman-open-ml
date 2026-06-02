@@ -1,0 +1,7 @@
+{
+  "train_size": 15000,
+  "cnn_epochs": 20,
+  "seed": 0,
+  "seeds": 3,
+  "verbose": false
+}

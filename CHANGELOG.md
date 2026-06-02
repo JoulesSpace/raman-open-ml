@@ -41,8 +41,10 @@ follows [Keep a Changelog](https://keepachangelog.com/); versions follow semver.
   RandomForest alone (0.848): an honest negative for stacking when one model
   dominates a small set.
 - Generative augmentation (few-shot bacteria-ID): classical augmentation (0.694)
-  beats every generator; among generators the conv WGAN-GP (0.669) beats the conv
-  DDPM (0.472). "Diffusion > GAN" does not hold on this small, smooth-signal set.
+  beats every standalone generator; among generators the conv WGAN-GP (0.669) beats
+  the conv DDPM (0.472). Stacking the good generator on top of classical is the
+  overall best (classical + WGAN-GP = 0.713); stacking the weak DDPM hurts (0.644).
+  "Diffusion > GAN" does not hold on this small, smooth-signal set.
 
 ### Fixed
 - Mahalanobis OOD: pooled within-class covariance now uses the correct

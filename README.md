@@ -68,7 +68,7 @@ result, so the thinking process is auditable end to end:
 | `run_domain_shift.py` | in-distribution vs cross-domain vs adapted (4 models) + temp-scaling + conformal | 1D-ResNet **0.940** in-dist -> 0.55 shift -> 0.76 adapted |
 | `run_sota_classification.py` | pretrain -> fine-tune -> heterogeneous ensemble + TTA | **0.862** (beats Ho 0.822 & SANet 0.861) |
 | `run_ssl_classification.py` | self-supervised masked-AE pretraining + fine-tuned ensemble | **0.711** (5-member + TTA; see SSL note) |
-| `run_generative_augmentation.py` | few-shot augmentation: 1D conv GAN vs DDPM vs tabgan (CTGAN/forest/copula) vs classical | classical aug **0.694** > WGAN-GP 0.669 > DDPM 0.472 |
+| `run_generative_augmentation.py` | few-shot augmentation: 1D conv GAN vs DDPM vs tabgan (CTGAN/forest/copula) vs classical, incl. stacking | **classical+WGAN-GP 0.713** > classical 0.694 > WGAN-GP 0.669 > DDPM 0.472 |
 | `run_quantification.py` | PLSR/PCR/SVR/kNN/RF/1D-CNN + CV-weighted ensemble + SD-augmentation + CV | RandomForest **R²=0.848** (ensemble 0.833) |
 | `run_pipeline.py` | **unified sweep**: baseline x norm x SG-deriv x DR x model + HPO | ALS+L2+SG-d1+RF -> 0.792, **HPO 0.808** |
 | `run_openset.py` | reject unknown isolates (MSP / energy / Mahalanobis) | AUROC ~0.75, closed-set 0.81 |
@@ -309,8 +309,10 @@ DDPM), against classical domain augmentation.
 
 | Augmentation | test accuracy |
 |--------------|--------------:|
-| **classical aug** (offset/slope/shift/warp/noise) | **0.694** |
+| **classical aug + WGAN-GP** (stacked) | **0.713** |
+| classical aug (offset/slope/shift/warp/noise) | 0.694 |
 | WGAN-GP (1-D conv, ours) | 0.669 |
+| classical aug + diffusion (stacked) | 0.644 |
 | real only (floor) | 0.613 |
 | CTGAN / Bayesian copula (tabgan) | 0.613 (synthetic filtered out) |
 | forest diffusion (tabgan) | 0.525 |
@@ -319,19 +321,34 @@ DDPM), against classical domain augmentation.
 
 ![generative augmentation](benchmarks/plots/generative_augmentation.png)
 
-Two honest, slightly counter-intuitive findings. **(1) No generative model beats
-cheap classical augmentation** - physics-informed transforms are the right tool
-for few-shot Raman. **(2) The conv WGAN-GP (0.669) beats our conv DDPM (0.472)**,
-so the usual "diffusion > GAN" intuition does *not* hold here: a DDPM is
-data-hungry and undertrains on a few hundred spectra, and its samples capture the
-gross spectral shape but smooth away the sharp peaks that separate isolates (below)
-- which is also why it hurt accuracy. The generic tabular synthesizers either add
+Three honest, partly counter-intuitive findings. **(1) Classical augmentation
+alone beats every standalone generator** - physics-informed transforms are the
+right tool for few-shot Raman. **(2) The conv WGAN-GP (0.669) beats our conv DDPM
+(0.472)**, so "diffusion > GAN" does *not* hold here: a DDPM is data-hungry, its
+samples capture the gross spectral shape but smooth away the sharp peaks that
+separate isolates (below), which is also why it hurt accuracy. **(3) Stacking the
+*good* generator on top of classical helps, the *bad* one hurts**: classical +
+WGAN-GP is the overall best (**0.713**, +2 pts over classical alone), while
+classical + DDPM (0.644) drags it down. Generic tabular synthesizers either add
 noise (random/forest hurt) or have their samples discarded by tabgan's adversarial
-filter (CTGAN/copula contributed ~nothing). The lesson: respect the data's
-structure (locality, known nuisance transforms) before reaching for a heavier
-generator.
+filter (CTGAN/copula contributed ~nothing). Lesson: respect the data's structure
+(locality, known nuisance transforms) first; layer a generator on top only when it
+is good enough to clear the classical baseline.
 
 ![real vs generated spectra](benchmarks/plots/generated_spectra.png)
+
+**Was the comparison fair on training budget?** A generator result is only honest
+if it is not just an under-training artefact, so `run_generative_epochs_sweep.py`
+sweeps epochs (150 -> 1500) for both conv models:
+
+![generative epochs sweep](benchmarks/plots/generative_epochs_sweep.png)
+
+The **DDPM is flat at ~0.47 across the whole range** and its training loss barely
+moves (0.55 -> 0.52) - it has *converged*, so more epochs do not rescue it; the
+limit is data/capacity on 600 spectra, not budget. The **GAN does benefit from
+more training, peaking at 0.706 around 700 epochs** (then mildly over-trains), so
+the 300-epoch headline above slightly under-sells it. Crucially, **at every matched
+budget the GAN beats the DDPM**, so the ranking is robust to training time.
 
 ### Calibration transfer (simulated secondary instrument)
 Mean over 25 random splits (n=48 is tiny, so single splits are noisy). A model

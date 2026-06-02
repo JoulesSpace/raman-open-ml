@@ -76,8 +76,9 @@ scripts/           download_data, run_classification, run_quantification,
                    run_domain_shift, run_sota_classification, run_openset,
                    run_calibration_transfer, run_pca_explore, run_dimreduction,
                    run_interpretability, run_shap_overview, run_ssl_classification, run_pipeline,
-                   run_generative_augmentation, plot_comparison,
-                   plot_preprocessing_showcase, infographic, folderinfo (lint)
+                   run_generative_augmentation, run_generative_epochs_sweep,
+                   plot_comparison, plot_preprocessing_showcase, infographic,
+                   folderinfo (lint)
 benchmarks/        results/ (CSV metrics), plots/ (PNG), MODEL_CARDS.md,
                    PLOTS_AND_METRICS.md, README
 data/              datasets - git-ignored contents (.gitkeep + .folderinfo only)

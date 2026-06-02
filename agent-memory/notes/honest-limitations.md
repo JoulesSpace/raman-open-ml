@@ -51,9 +51,11 @@ numbers with these caveats.
 - Conditional 1-D GAN and DDPM both exist (`generative.SpectralGAN` /
   `SpectralDiffusion`) and are benchmarked against tabgan (CTGAN/forest/copula) and
   classical augmentation in `run_generative_augmentation.py`. On few-shot bacteria-ID
-  **none beats classical augmentation (0.694)**; among generators the **WGAN-GP
-  (0.669) beats the DDPM (0.472)** - the DDPM undertrains on a few hundred spectra
-  and smooths away discriminative peaks. So "diffusion > GAN" does not hold here.
+  **no standalone generator beats classical augmentation (0.694)**; among generators
+  the **WGAN-GP (0.669) beats the DDPM (0.472)** - the DDPM smooths away discriminative
+  peaks (and an epoch sweep confirms it has converged, not under-trained). Stacking
+  classical + WGAN-GP is the overall best (0.713); classical + DDPM hurts (0.644).
+  So "diffusion > GAN" does not hold here.
 
 ## Not yet done
 - SSL pretraining is implemented (`SpectralMAE`, 0.711) but does not beat the

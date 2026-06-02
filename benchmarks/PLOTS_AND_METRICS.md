@@ -27,6 +27,7 @@ No spectroscopy-specific plots (it is a tabular/CV/NLP platform).
 - `sota_leaderboard.png` - our accuracy vs literature (Ho/SANet/SE-ResNet); accuracy-only, since published training cost is not comparable across papers
 - `generative_augmentation.png` - few-shot test accuracy by augmentation method (classical / tabgan family / 1-D conv GAN & DDPM)
 - `generated_spectra.png` - real vs diffusion-generated mean spectra (shows the DDPM captures gross shape but smooths peaks)
+- `generative_epochs_sweep.png` - test accuracy vs training epochs for the conv GAN and DDPM (training-budget fairness check)
 - `quantification_r2.png` - CV R² bar per regressor
 - `quantification_parity.png` - predicted-vs-true parity, coloured by particle size
 - `domain_shift.png` - grouped bar: in-distribution / cross-domain / adapted

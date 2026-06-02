@@ -47,7 +47,12 @@ def _methods():
 
 def _panel(X, y, color, title, path, rows):
     methods = _methods()
-    fig, axes = plt.subplots(1, len(methods), figsize=(4 * len(methods), 4))
+    # Grid with at most 3 columns, so 5 methods read as 3 on top + 2 below
+    # rather than one cramped row.
+    ncols = min(3, len(methods))
+    nrows = (len(methods) + ncols - 1) // ncols
+    fig, axes = plt.subplots(nrows, ncols, figsize=(4 * ncols, 4 * nrows))
+    axes = np.atleast_1d(axes).ravel()
     for ax, mth in zip(axes, methods, strict=False):
         try:
             emb = embed_2d(X, method=mth, y=y, seed=0)
@@ -61,6 +66,8 @@ def _panel(X, y, color, title, path, rows):
         except Exception as e:  # noqa: BLE001
             ax.set_title(f"{mth.upper()} failed", fontsize=9)
             print(f"  {title}/{mth} failed: {e}")
+    for ax in axes[len(methods):]:  # hide any unused cell
+        ax.axis("off")
     fig.suptitle(f"Dimensionality reduction: {title}")
     fig.tight_layout()
     fig.savefig(path, dpi=130)

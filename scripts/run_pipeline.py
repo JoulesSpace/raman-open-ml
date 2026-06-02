@@ -22,6 +22,7 @@ import sys
 import matplotlib
 
 matplotlib.use("Agg")
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -145,15 +146,47 @@ def main():
                   for k, v in params.items()}
             print(f"  best params: {pp}")
 
-    # plot top-12
-    top = df.head(12)
-    labels = [f"{r.model}|{r.baseline}|{r.norm}|{r.sg}|{r.dr}" for r in top.itertuples()]
-    fig, ax = plt.subplots(figsize=(9, 5))
-    ax.barh(range(len(top))[::-1], top["R2"], color="#4C72B0")
-    ax.set_yticks(range(len(top))[::-1]); ax.set_yticklabels(labels, fontsize=7)
-    ax.set_xlabel("R$^2$ (CV)"); ax.set_xlim(0, 1)
-    ax.set_title("Unified pipeline sweep - top 12 (model|baseline|norm|sg|dr)")
-    fig.tight_layout(); fig.savefig(os.path.join(PLOTS_DIR, "pipeline_sweep.png"), dpi=130)
+    # plot top-12: encode the whole pipeline visually instead of a cryptic
+    # "RF|als|l2|d1|none" label. colour = model, hatch = baseline, and three
+    # on/off dots = the toggle steps (SNV, SG 1st-derivative, PCA).
+    top = df.head(12).reset_index(drop=True)
+    n = len(top)
+    model_colors = {"RF": "#4C72B0", "SVR": "#55A868", "PLSR": "#C44E52", "kNN": "#8172B3"}
+    baseline_hatch = {"als": "///", "arpls": "xxx", "snip": ".."}
+    on_c, off_c = "#2a9d8f", "#cfd4dc"
+    dot_cols = [("SNV", "norm", "snv"), ("SG d1", "sg", "d1"), ("PCA", "dr", "pca30")]
+    dot_x = [1.05, 1.11, 1.17]
+
+    fig, ax = plt.subplots(figsize=(10, 5.6))
+    for i, r in enumerate(top.itertuples()):
+        y = n - 1 - i  # best at the top
+        ax.barh(y, r.R2, color=model_colors.get(r.model, "#999999"),
+                hatch=baseline_hatch.get(r.baseline, ""), edgecolor="white", linewidth=0.7)
+        ax.text(r.R2 + 0.012, y, f"{r.R2:.3f}", va="center", ha="left",
+                fontsize=7.5, color="black")
+        for (_, col, on_val), xx in zip(dot_cols, dot_x, strict=True):
+            engaged = getattr(r, col) == on_val
+            ax.scatter(xx, y, s=80, color=on_c if engaged else off_c,
+                       edgecolor="#444444", linewidth=0.4, zorder=5)
+    for (label, _, _), xx in zip(dot_cols, dot_x, strict=True):
+        ax.text(xx, n - 0.35, label, ha="center", va="bottom", fontsize=7.5)
+    ax.axvline(1.0, color="0.75", lw=0.8, ls=":")
+    ax.set_yticks(range(n)); ax.set_yticklabels(top["model"][::-1], fontsize=8)
+    ax.set_xlim(0, 1.22); ax.set_ylim(-0.7, n + 0.1)
+    ax.set_xticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+    ax.set_xlabel("R$^2$ (CV)")
+    ax.set_title("Unified pipeline sweep - top 12 by R$^2$\n"
+                 "colour = model  |  hatch = baseline  |  dots SNV / SG-d1 / PCA "
+                 "(green = on, grey = off)", fontsize=11)
+    model_handles = [mpatches.Patch(facecolor=c, label=m) for m, c in model_colors.items()]
+    base_handles = [mpatches.Patch(facecolor="white", edgecolor="#444", hatch=h, label=b)
+                    for b, h in baseline_hatch.items()]
+    leg1 = ax.legend(handles=model_handles, title="model", loc="upper left",
+                     bbox_to_anchor=(1.01, 1.0), fontsize=8, title_fontsize=8)
+    ax.add_artist(leg1)
+    ax.legend(handles=base_handles, title="baseline", loc="upper left",
+              bbox_to_anchor=(1.01, 0.55), fontsize=8, title_fontsize=8)
+    fig.savefig(os.path.join(PLOTS_DIR, "pipeline_sweep.png"), dpi=130, bbox_inches="tight")
     print("\nSaved benchmarks/results/pipeline_sweep.csv + plots/pipeline_sweep.png")
 
 

@@ -24,6 +24,7 @@ No spectroscopy-specific plots (it is a tabular/CV/NLP platform).
 ### This repo (`benchmarks/plots/`)
 - `classification_accuracy.png` - accuracy bar per classifier
 - `classification_confusion.png` - row-normalised confusion matrix (winner)
+- `sota_leaderboard.png` - our accuracy vs literature (Ho/SANet/SE-ResNet); accuracy-only, since published training cost is not comparable across papers
 - `quantification_r2.png` - CV R² bar per regressor
 - `quantification_parity.png` - predicted-vs-true parity, coloured by particle size
 - `domain_shift.png` - grouped bar: in-distribution / cross-domain / adapted

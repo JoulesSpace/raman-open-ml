@@ -33,6 +33,40 @@ RESULTS_DIR = os.path.join(_ROOT, "benchmarks", "results")
 
 LITERATURE = {"Ho 2019 ResNet": 0.822, "SANet 2026": 0.861,
               "SE-ResNet ensemble 2024": 0.878}
+PLOTS_DIR = os.path.join(_ROOT, "benchmarks", "plots")
+
+
+def plot_leaderboard(our_acc, path):
+    """Quality-only leaderboard: our accuracy vs published numbers.
+
+    Deliberately NOT a cost-vs-quality plot: the papers do not report comparable
+    training cost (different hardware / data sizes), so a cost axis would be
+    fabricated. Accuracy is the honest common ground.
+    """
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    bars = [("Ho 2019\nResNet", 0.822, False),
+            ("SANet\n2026", 0.861, False),
+            ("this repo\nens. + TTA", our_acc, True),
+            ("SE-ResNet ens.\n2024 (open-world)", 0.878, False)]
+    bars.sort(key=lambda b: b[1])
+    labels = [b[0] for b in bars]
+    vals = [b[1] for b in bars]
+    colors = ["#2a9d8f" if b[2] else "#9aa3b2" for b in bars]
+    fig, ax = plt.subplots(figsize=(8.2, 4.7))
+    ax.bar(range(len(bars)), vals, color=colors, edgecolor="#12263a", linewidth=0.5)
+    for i, v in enumerate(vals):
+        ax.text(i, v + 0.0015, f"{v:.3f}", ha="center", fontsize=9,
+                fontweight="bold" if bars[i][2] else "normal")
+    ax.set_xticks(range(len(bars))); ax.set_xticklabels(labels, fontsize=8.5)
+    ax.set_ylim(0.80, 0.895); ax.set_ylabel("test accuracy")
+    ax.set_title("Bacteria-ID classification vs literature "
+                 "(pretrain -> fine-tune -> test)\n"
+                 "accuracy only; training cost not comparable across papers",
+                 fontsize=10)
+    ax.grid(axis="y", alpha=0.3)
+    fig.tight_layout(); fig.savefig(path, dpi=130); plt.close(fig)
 
 
 def main():
@@ -143,7 +177,9 @@ def main():
     with open(os.path.join(RESULTS_DIR, "sota_classification_params.json"),
               "w") as fh:
         json.dump(vars(args), fh, indent=2)  # provenance: params -> metrics
-    print("\nSaved benchmarks/results/sota_classification_metrics.csv")
+    plot_leaderboard(acc_ens, os.path.join(PLOTS_DIR, "sota_leaderboard.png"))
+    print("\nSaved benchmarks/results/sota_classification_metrics.csv "
+          "+ plots/sota_leaderboard.png")
 
 
 if __name__ == "__main__":

@@ -71,6 +71,7 @@ result, so the thinking process is auditable end to end:
 | `run_generative_augmentation.py` | few-shot augmentation: 1D conv GAN vs DDPM vs tabgan (CTGAN/forest/copula) vs classical, incl. stacking | **classical+WGAN-GP 0.713** > classical 0.694 > WGAN-GP 0.669 > DDPM 0.472 |
 | `run_quantification.py` | PLSR/PCR/SVR/kNN/RF/1D-CNN + CV-weighted ensemble + SD-augmentation + CV | RandomForest **R²=0.848** (ensemble 0.833) |
 | `run_pipeline.py` | **unified sweep**: baseline x norm x SG-deriv x DR x model + HPO | ALS+L2+SG-d1+RF -> 0.792, **HPO 0.808** |
+| `run_pipeline_augmented.py` | top-5 sweep configs + leakage-safe SD-noise augmentation | RF + aug **R²=0.839** (beats 0.792 / HPO 0.808) |
 | `run_openset.py` | reject unknown isolates (MSP / energy / Mahalanobis) | AUROC ~0.75, closed-set 0.81 |
 | `run_calibration_transfer.py` | guarded PDS transfer + jackknife+ intervals | guarded R²: PLSR 0.46 / SVR 0.50 / RF 0.63; coverage 0.95 |
 | `run_dimreduction.py` | PCA / t-SNE / UMAP / MDS / LDA + separability metric | LDA sil 0.71/kNN 0.98; t-SNE best *unsupervised* |
@@ -421,6 +422,29 @@ in nearly every top pipeline - the single most consistent lever once components
 are combined.
 
 ![pipeline sweep](benchmarks/plots/pipeline_sweep.png)
+
+**Does augmentation push the top pipelines higher?** `run_pipeline_augmented.py`
+re-runs the top-5 configs with augmentation added to the *training folds only*
+(leakage-safe, same CV). The polystyrene set is 48 mean spectra - far too few to
+train a learned GAN/DDPM (they would collapse), so the appropriate generative
+augmenter is the dataset's own measurement-noise model: replicates sampled
+~ N(mean, measured per-point SD). It lifts the winner from **0.792 to 0.839**
+(and past the HPO 0.808):
+
+| Pipeline | no aug | + SD-noise aug |
+|----------|-------:|---------------:|
+| **RF + ALS + L2 + SG-d1** | 0.792 | **0.839** |
+| RF + ALS + SNV + SG-d1 | 0.766 | 0.817 |
+| SVR + arPLS + SNV + PCA | 0.757 | 0.688 |
+| PLSR + ALS + L2 + SG-d1 + PCA | 0.754 | 0.759 |
+| PLSR + ALS + L2 + SG-d1 | 0.746 | 0.711 |
+
+![augmented top-5](benchmarks/plots/pipeline_augmented.png)
+
+The gain is **model-dependent**: the tree ensembles gain ~+0.05 (extra noisy
+replicates regularise them), while SVR and one PLSR config *lose* - more synthetic
+spectra are not free. The honest headline: augmenting the best pipeline does beat
+the un-augmented sweep, RF reaching **R2 = 0.839**.
 
 ### Hyperparameter tuning (detail)
 `raman_ml.tuning.tune(estimator, space, X, y, method=...)` wraps any scikit-learn

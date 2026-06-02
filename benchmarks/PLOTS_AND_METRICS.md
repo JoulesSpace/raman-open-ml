@@ -28,6 +28,7 @@ plots (these are general tabular / CV / NLP tools).
 - `generative_augmentation.png` - few-shot test accuracy by augmentation method (classical / tabgan family / 1-D conv GAN & DDPM)
 - `generated_spectra.png` - real vs diffusion-generated mean spectra (shows the DDPM captures gross shape but smooths peaks)
 - `generative_epochs_sweep.png` - test accuracy vs training epochs for the conv GAN and DDPM (training-budget fairness check)
+- `pipeline_augmented.png` - top-5 pipelines, no-aug vs SD-noise augmentation (RF reaches R2 0.839, beating the 0.792 sweep winner)
 - `quantification_r2.png` - CV R² bar per regressor
 - `quantification_parity.png` - predicted-vs-true parity, coloured by particle size
 - `domain_shift.png` - grouped bar: in-distribution / cross-domain / adapted

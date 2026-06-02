@@ -49,7 +49,12 @@ that fingerprint drove almost every design decision here:
 - **The instrument is part of the measurement.** The same sample on a different
   spectrometer produces a *shifted* spectrum, so a model trained on one setup
   degrades on another. This is the domain-shift problem and the reason for the
-  calibration-transfer and domain-shift-aware parts of this repo.
+  calibration-transfer and domain-shift-aware parts of this repo. It is the same
+  phenomenon that plagues medical imaging - CT scanners differ by vendor,
+  reconstruction kernel and dose, and microscopy/digital pathology differs by
+  stain batch, scanner and illumination - which is why those fields invest
+  heavily in harmonisation and stain/scanner normalisation. Treating the
+  measurement device as a variable, not a constant, is a general lesson.
 
 ## Experiments & tests we run
 
@@ -84,14 +89,14 @@ problems - is the **trustworthy-ML + reproducibility layer**:
 
 | Capability | RamanSPy / others | here |
 |---|:---:|:---:|
-| Preprocessing (ALS/arPLS/airPLS, SNV/MSC, SG derivatives) | ✅ | ✅ |
-| Classical ML + PLS quantification | ✅ | ✅ |
-| 1D-CNN / 1D-ResNet deep models | partial | ✅ |
-| **Domain-shift-aware evaluation** | ❌ | ✅ |
-| **Conformal prediction** (coverage-guaranteed UQ) | ❌ | ✅ |
-| **Open-set / OOD rejection** | ❌ | ✅ |
-| **Calibration transfer** (PDS) | ❌ | ✅ |
-| Temperature scaling + ECE, deep ensembles, C-Mixup, SpecAugment | ❌ | ✅ |
+| Preprocessing (ALS/arPLS/airPLS, SNV/MSC, SG derivatives) | ✓ | ✓ |
+| Classical ML + PLS quantification | ✓ | ✓ |
+| 1D-CNN / 1D-ResNet deep models | partial | ✓ |
+| **Domain-shift-aware evaluation** | ✗ | ✓ |
+| **Conformal prediction** (coverage-guaranteed UQ) | ✗ | ✓ |
+| **Open-set / OOD rejection** | ✗ | ✓ |
+| **Calibration transfer** (PDS) | ✗ | ✓ |
+| Temperature scaling + ECE, deep ensembles, C-Mixup, SpecAugment | ✗ | ✓ |
 
 ## The two tasks
 
@@ -335,15 +340,17 @@ the winner. Best combination on quantification:
 **HPO -> 0.808**. The SG derivative appears in nearly every top pipeline - the
 single most consistent lever once components are combined.
 
-Each bar in the plot is one pipeline, labelled `model|baseline|norm|sg|dr`:
-- **model** - `PLSR`, `SVR`, `RF` (RandomForest), `kNN`
-- **baseline** - baseline-removal method: `als`, `arpls`, `snip`
-- **norm** - per-spectrum normalisation: `l2` (unit length) or `snv` (standard normal variate)
-- **sg** - Savitzky-Golay step: `none` or `d1` (1st derivative)
-- **dr** - dimensionality reduction: `none` or `pca30` (PCA to 30 components)
+Each bar in the plot is one pipeline, with the full configuration encoded visually:
+- **bar colour - the model**: `RF` (RandomForest), `SVR`, `PLSR`, `kNN`.
+- **bar hatch - the baseline-removal method**: `als` (`///`), `arpls` (`xxx`), `snip` (`..`).
+- **three dots on the right - the optional steps**, green = applied, grey = off:
+  **SNV** (standard-normal-variate normalisation, vs plain L2), **SG-d1**
+  (Savitzky-Golay 1st derivative), and **PCA** (reduce to 30 components).
 
-So the winning bar `RF|als|l2|d1|none` reads "RandomForest on ALS-baselined,
-L2-normalised, 1st-derivative spectra, no PCA".
+So the top bar is RandomForest, ALS-hatched, with a grey-green-grey dot row =
+"L2-normalised (SNV off), 1st-derivative (SG on), no PCA". The SG-d1 dot is green
+in nearly every top pipeline - the single most consistent lever once components
+are combined.
 
 ![pipeline sweep](benchmarks/plots/pipeline_sweep.png)
 

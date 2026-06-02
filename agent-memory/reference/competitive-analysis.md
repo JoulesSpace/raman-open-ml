@@ -9,26 +9,26 @@ tags: [competitive-analysis, sota, positioning]
 
 Compared against the systems and projects surfaced by the literature/OSS scans
 ([[sota-raman-ml]]). "Best OS Raman ML project" is multi-dimensional; here is an
-honest scorecard. ✅ = strong / present, ◑ = partial, ❌ = absent.
+honest scorecard. ✓ = strong / present, ◑ = partial, ✗ = absent.
 
 ## Capability matrix
 
 | Capability | RamanSPy | bacteria-ID (Ho) | SANet / benchmark 2026 | open-world SE-ResNet 2024 | **this repo** |
 |---|:--:|:--:|:--:|:--:|:--:|
-| Preprocessing breadth | ✅✅ (15+ baselines) | ◑ | ◑ | ◑ | ◑ (ALS/arPLS/airPLS, SNV/MSC, SG) |
-| Dataset loaders | ✅✅ (RRUFF, bacteria, cells, COVID...) | ◑ (1) | ◑ | ◑ | ◑ (2: bacteria-ID, polystyrene) |
-| Deep 1D models | ◑ | ✅ (ResNet) | ✅ (SANet/transformer) | ✅ (SE-ResNet) | ✅ (CNN/ResNet/SE/multi-scale + ensemble) |
+| Preprocessing breadth | ✓✓ (15+ baselines) | ◑ | ◑ | ◑ | ◑ (ALS/arPLS/airPLS, SNV/MSC, SG) |
+| Dataset loaders | ✓✓ (RRUFF, bacteria, cells, COVID...) | ◑ (1) | ◑ | ◑ | ◑ (2: bacteria-ID, polystyrene) |
+| Deep 1D models | ◑ | ✓ (ResNet) | ✓ (SANet/transformer) | ✓ (SE-ResNet) | ✓ (CNN/ResNet/SE/multi-scale + ensemble) |
 | Classification acc (official protocol) | n/a | 0.822 | 0.861 | **0.878** | 0.862 (beats SANet; heterogeneous ensemble + TTA) |
-| Hyperparameter tuning | ❌ | ❌ (manual) | ◑ | ◑ | ✅ (grid/random/Optuna-Bayes) |
-| Uncertainty (conformal/temp/ECE) | ❌ | ❌ | ❌ | ◑ (UQ paper-only) | ✅ |
-| Open-set / OOD | ❌ | ❌ | ❌ | ✅ (the one that does) | ✅ (MSP/energy/Mahalanobis) |
-| Calibration transfer | ❌ | ❌ | ❌ | ❌ | ✅ (PDS) |
-| Domain-shift-aware eval | ❌ | ◑ (fine-tune) | ◑ (reports gap) | ◑ | ✅ (in-dist/cross/adapted) |
-| Interpretability | ❌ | ❌ | ❌ | ❌ | ✅ (integrated gradients + SHAP + Grad-CAM) |
-| Reproducible benchmark harness | ❌ | ❌ | ◑ (paper) | ❌ | ✅ (6 one-command scripts) |
-| Tests / CI / packaging | ✅ | ❌ | ❌ | ❌ | ✅ (33 tests, ruff, CI, pyproject) |
-| Pretrained model zoo (hosted) | ❌ | ✅ (weights) | ❌ | ❌ | ❌ (not yet) |
-| OSI license | ✅ (BSD) | ✅ (MIT) | mixed | mixed | ✅ (AGPL-3.0, copyleft) |
+| Hyperparameter tuning | ✗ | ✗ (manual) | ◑ | ◑ | ✓ (grid/random/Optuna-Bayes) |
+| Uncertainty (conformal/temp/ECE) | ✗ | ✗ | ✗ | ◑ (UQ paper-only) | ✓ |
+| Open-set / OOD | ✗ | ✗ | ✗ | ✓ (the one that does) | ✓ (MSP/energy/Mahalanobis) |
+| Calibration transfer | ✗ | ✗ | ✗ | ✗ | ✓ (PDS) |
+| Domain-shift-aware eval | ✗ | ◑ (fine-tune) | ◑ (reports gap) | ◑ | ✓ (in-dist/cross/adapted) |
+| Interpretability | ✗ | ✗ | ✗ | ✗ | ✓ (integrated gradients + SHAP + Grad-CAM) |
+| Reproducible benchmark harness | ✗ | ✗ | ◑ (paper) | ✗ | ✓ (6 one-command scripts) |
+| Tests / CI / packaging | ✓ | ✗ | ✗ | ✗ | ✓ (39 tests, ruff, CI, pyproject) |
+| Pretrained model zoo (hosted) | ✗ | ✓ (weights) | ✗ | ✗ | ✗ (not yet) |
+| OSI license | ✓ (BSD) | ✓ (MIT) | mixed | mixed | ✓ (AGPL-3.0, copyleft) |
 
 ## Verdict (honest)
 

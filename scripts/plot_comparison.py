@@ -69,6 +69,8 @@ def cost_quality(df, cost_col, quality_col, qlabel, title, path):
         ax.annotate(name, (x[i], y[i]), textcoords="offset points",
                     xytext=(6, 4), fontsize=8)
     ax.set_xscale("log")
+    # Pad the log x-range so point labels (some are long, e.g. the ensemble) fit.
+    ax.set_xlim(x.min() * 0.5, x.max() * 6)
     ax.set_xlabel(f"{cost_col} - training cost, seconds (log scale)")
     ax.set_ylabel(qlabel); ax.set_title(title)
     ax.grid(alpha=0.3, which="both"); ax.legend(loc="lower right", fontsize=8)

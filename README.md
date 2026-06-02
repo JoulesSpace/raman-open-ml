@@ -122,6 +122,13 @@ multi-scale, with augmentation and test-time augmentation) scores **86.2%**
 | **this repo: heterogeneous ensemble + TTA** | **0.862** |
 | SE-ResNet ensemble 2024 (open-world SOTA) | 0.878 |
 
+![classification vs literature](benchmarks/plots/sota_leaderboard.png)
+
+This is an **accuracy-only** comparison on purpose: the papers do not report
+comparable training cost (different hardware and data sizes), so a cost-vs-quality
+view against the literature would have to invent their cost. We show cost-vs-quality
+only for our *own* models, where the seconds are measured on this machine.
+
 We beat the foundational result (+4 pts) **and the 2026 architecture SOTA SANet**,
 and sit ~1.5 pts below the open-world SOTA (0.878) - **while also shipping
 calibrated uncertainty no other Raman repo has**: temperature scaling + RAPS
@@ -257,6 +264,13 @@ The CV-weighted ensemble (`models.WeightedEnsembleRegressor`) lands at R²=0.833
 clearly dominates, so blending it with weaker learners (PLSR/kNN) dilutes rather
 than helps. An honest negative for stacking here, and the reason we report the
 single best model as the headline.
+
+The same models on a **cost-vs-quality** view (training time, log scale, vs R²)
+make the trade-off explicit: **SVR-rbf** is the sweet spot (R² 0.83 in ~6s),
+RandomForest buys the top R² 0.85 for ~190s, and the ensemble sits far right at
+~1000s *off* the Pareto frontier (slowest yet not best).
+
+![quantification cost vs quality](benchmarks/plots/quantification_cost_quality.png)
 
 ### Open-set rejection of unknown isolates
 Closed-set accuracy 0.807; OOD AUROC ~0.73-0.75 (MSP / Energy / Mahalanobis).

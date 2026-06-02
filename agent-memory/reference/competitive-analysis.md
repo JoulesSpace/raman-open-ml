@@ -26,7 +26,7 @@ honest scorecard. ✓ = strong / present, ◑ = partial, ✗ = absent.
 | Domain-shift-aware eval | ✗ | ◑ (fine-tune) | ◑ (reports gap) | ◑ | ✓ (in-dist/cross/adapted) |
 | Interpretability | ✗ | ✗ | ✗ | ✗ | ✓ (integrated gradients + SHAP + Grad-CAM) |
 | Reproducible benchmark harness | ✗ | ✗ | ◑ (paper) | ✗ | ✓ (6 one-command scripts) |
-| Tests / CI / packaging | ✓ | ✗ | ✗ | ✗ | ✓ (39 tests, ruff, CI, pyproject) |
+| Tests / CI / packaging | ✓ | ✗ | ✗ | ✗ | ✓ (40 tests, ruff, CI, pyproject) |
 | Pretrained model zoo (hosted) | ✗ | ✓ (weights) | ✗ | ✗ | ✗ (not yet) |
 | OSI license | ✓ (BSD) | ✓ (MIT) | mixed | mixed | ✓ (AGPL-3.0, copyleft) |
 

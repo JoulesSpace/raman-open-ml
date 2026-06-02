@@ -4,7 +4,7 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](pyproject.toml)
 [![Code style: Ruff](https://img.shields.io/badge/lint-ruff-261230.svg)](https://github.com/astral-sh/ruff)
-[![Tests: 39](https://img.shields.io/badge/tests-39_passing-2a9d8f.svg)](tests/test_core.py)
+[![Tests: 40](https://img.shields.io/badge/tests-40_passing-2a9d8f.svg)](tests/test_core.py)
 
 **A trustworthy, reproducible machine-learning toolkit for Raman spectroscopy**,
 built on public, openly-licensed data. It does the classic Raman workflow
@@ -80,7 +80,7 @@ result, so the thinking process is auditable end to end:
 | `run_shap_overview.py` | per-class SHAP heatmap over all 30 isolates | yeasts key on 1047 cm⁻¹, bacteria on 785/1007 |
 | `plot_comparison.py`, `infographic.py` | cost-vs-quality Pareto + the hero figure | - |
 | `plot_preprocessing_showcase.py` | preprocessing cascade + baseline-method comparison figures | - |
-| `pytest` | **39 fast unit tests** of every module (no downloads/GPU) | all green in CI |
+| `pytest` | **40 fast unit tests** of every module (no downloads/GPU) | all green in CI |
 
 ## Why this exists
 

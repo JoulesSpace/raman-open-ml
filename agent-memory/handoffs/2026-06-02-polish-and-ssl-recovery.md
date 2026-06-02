@@ -33,6 +33,11 @@ Follow-up to [[2026-06-02-first-build]]. Focus: make the repo presentation-grade
   references" section at the bottom, `CITATION.cff`, test count synced to 39.
 - Reference repos surveyed and cited: DeepeR (Horgan 2021), Coca-Lopez workshop
   notebook (confirmed our preprocessing covers the standard teaching workflow).
+- **Generative augmentation** added (`raman_ml.generative`): class-conditional 1-D
+  WGAN-GP + DDPM, plus a tabgan comparison (CTGAN/forest/copula) in
+  `run_generative_augmentation.py`. Honest finding on few-shot bacteria-ID: classical
+  aug (0.694) > WGAN-GP (0.669) > ... > DDPM (0.472). GAN beat diffusion here; no
+  generator beat classical augmentation. tabgan added as an optional `gen` extra.
 
 ## Verified state
 

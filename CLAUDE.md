@@ -70,13 +70,14 @@ src/raman_ml/      preprocessing (ALS/arPLS/airPLS/ModPoly/IModPoly/SNIP/
                    interpretability (integrated grads + SHAP + Grad-CAM),
                    variable_selection (VIP), dimensionality_reduction
                    (PCA/t-SNE/UMAP/MDS/Isomap/LDA), tuning (grid/random/Optuna),
-                   peaks (peak-feature extraction), ssl (masked-AE pretraining)
+                   peaks (peak-feature extraction), ssl (masked-AE pretraining),
+                   generative (conditional 1D WGAN-GP + DDPM diffusion + baselines)
 scripts/           download_data, run_classification, run_quantification,
                    run_domain_shift, run_sota_classification, run_openset,
                    run_calibration_transfer, run_pca_explore, run_dimreduction,
                    run_interpretability, run_shap_overview, run_ssl_classification, run_pipeline,
-                   plot_comparison, plot_preprocessing_showcase, infographic,
-                   folderinfo (lint)
+                   run_generative_augmentation, plot_comparison,
+                   plot_preprocessing_showcase, infographic, folderinfo (lint)
 benchmarks/        results/ (CSV metrics), plots/ (PNG), MODEL_CARDS.md,
                    PLOTS_AND_METRICS.md, README
 data/              datasets - git-ignored contents (.gitkeep + .folderinfo only)

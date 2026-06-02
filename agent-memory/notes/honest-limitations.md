@@ -47,9 +47,17 @@ numbers with these caveats.
 - **RandomForest beats the CNN on quantification** only because n=48 is tiny;
   this is not evidence CNNs are worse for quantification in general.
 
+## Generative augmentation (implemented; honest negative)
+- Conditional 1-D GAN and DDPM both exist (`generative.SpectralGAN` /
+  `SpectralDiffusion`) and are benchmarked against tabgan (CTGAN/forest/copula) and
+  classical augmentation in `run_generative_augmentation.py`. On few-shot bacteria-ID
+  **none beats classical augmentation (0.694)**; among generators the **WGAN-GP
+  (0.669) beats the DDPM (0.472)** - the DDPM undertrains on a few hundred spectra
+  and smooths away discriminative peaks. So "diffusion > GAN" does not hold here.
+
 ## Not yet done
-- SSL pretraining is now implemented (`SpectralMAE`, 0.711) but does not beat the
-  supervised ensemble (0.862) on this label-rich set. No GAN/diffusion augmentation.
+- SSL pretraining is implemented (`SpectralMAE`, 0.711) but does not beat the
+  supervised ensemble (0.862) on this label-rich set.
   VIP selection exists (`variable_selection.py`); no CARS yet.
 - No real multi-instrument dataset; no cross-dataset (RRUFF/MLROD) eval.
 - Deep ensembles and Integrated-Gradients interpretability now exist as modules

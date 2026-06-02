@@ -27,6 +27,10 @@ follows [Keep a Changelog](https://keepachangelog.com/); versions follow semver.
 - `plot_preprocessing_showcase.py`: preprocessing-cascade and baseline-method
   comparison figures (DeepeR-style method overlay).
 - CV-weighted regression ensemble (`models.WeightedEnsembleRegressor`).
+- Generative augmentation (`raman_ml.generative`): class-conditional 1-D WGAN-GP
+  (`SpectralGAN`) and DDPM (`SpectralDiffusion`), plus random-resample and a
+  PCA-Gaussian copula baseline, benchmarked against tabgan (CTGAN / ForestDiffusion
+  / Bayesian) in `run_generative_augmentation.py`.
 - CITATION.cff.
 
 ### Results
@@ -36,6 +40,9 @@ follows [Keep a Changelog](https://keepachangelog.com/); versions follow semver.
 - Quantification ensemble (PLSR+SVR+RF+kNN, CV-weighted) = R² 0.833, below
   RandomForest alone (0.848): an honest negative for stacking when one model
   dominates a small set.
+- Generative augmentation (few-shot bacteria-ID): classical augmentation (0.694)
+  beats every generator; among generators the conv WGAN-GP (0.669) beats the conv
+  DDPM (0.472). "Diffusion > GAN" does not hold on this small, smooth-signal set.
 
 ### Fixed
 - Mahalanobis OOD: pooled within-class covariance now uses the correct

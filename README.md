@@ -68,6 +68,7 @@ result, so the thinking process is auditable end to end:
 | `run_domain_shift.py` | in-distribution vs cross-domain vs adapted (4 models) + temp-scaling + conformal | 1D-ResNet **0.940** in-dist -> 0.55 shift -> 0.76 adapted |
 | `run_sota_classification.py` | pretrain -> fine-tune -> heterogeneous ensemble + TTA | **0.862** (beats Ho 0.822 & SANet 0.861) |
 | `run_ssl_classification.py` | self-supervised masked-AE pretraining + fine-tuned ensemble | **0.711** (5-member + TTA; see SSL note) |
+| `run_generative_augmentation.py` | few-shot augmentation: 1D conv GAN vs DDPM vs tabgan (CTGAN/forest/copula) vs classical | classical aug **0.694** > WGAN-GP 0.669 > DDPM 0.472 |
 | `run_quantification.py` | PLSR/PCR/SVR/kNN/RF/1D-CNN + CV-weighted ensemble + SD-augmentation + CV | RandomForest **R²=0.848** (ensemble 0.833) |
 | `run_pipeline.py` | **unified sweep**: baseline x norm x SG-deriv x DR x model + HPO | ALS+L2+SG-d1+RF -> 0.792, **HPO 0.808** |
 | `run_openset.py` | reject unknown isolates (MSP / energy / Mahalanobis) | AUROC ~0.75, closed-set 0.81 |
@@ -295,6 +296,42 @@ Self-supervision still trails the supervised ensemble (0.862) on this dataset,
 which is expected: with 60k labelled reference spectra available, masked-AE
 pretraining has little label scarcity to exploit. The value is the diagnosis,
 the working configuration, and an honest comparison rather than a buried result.
+
+### Generative augmentation: does a GAN or a diffusion model help?
+`run_generative_augmentation.py` builds a **few-shot** regime (20 spectra per
+isolate) where augmentation should matter most, then asks whether adding
+synthetic spectra lifts a downstream classifier (test = 3000). It compares two
+families: general tabular synthesizers via the **tabgan** library applied in PCA
+space (random/Original, Bayesian Gaussian-copula, CTGAN, ForestDiffusion) and two
+**purpose-built 1-D convolutional** generators we wrote (`generative.SpectralGAN`,
+a class-conditional WGAN-GP, and `generative.SpectralDiffusion`, a class-conditional
+DDPM), against classical domain augmentation.
+
+| Augmentation | test accuracy |
+|--------------|--------------:|
+| **classical aug** (offset/slope/shift/warp/noise) | **0.694** |
+| WGAN-GP (1-D conv, ours) | 0.669 |
+| real only (floor) | 0.613 |
+| CTGAN / Bayesian copula (tabgan) | 0.613 (synthetic filtered out) |
+| forest diffusion (tabgan) | 0.525 |
+| random resample (tabgan) | 0.485 |
+| diffusion / DDPM (1-D conv, ours) | 0.472 |
+
+![generative augmentation](benchmarks/plots/generative_augmentation.png)
+
+Two honest, slightly counter-intuitive findings. **(1) No generative model beats
+cheap classical augmentation** - physics-informed transforms are the right tool
+for few-shot Raman. **(2) The conv WGAN-GP (0.669) beats our conv DDPM (0.472)**,
+so the usual "diffusion > GAN" intuition does *not* hold here: a DDPM is
+data-hungry and undertrains on a few hundred spectra, and its samples capture the
+gross spectral shape but smooth away the sharp peaks that separate isolates (below)
+- which is also why it hurt accuracy. The generic tabular synthesizers either add
+noise (random/forest hurt) or have their samples discarded by tabgan's adversarial
+filter (CTGAN/copula contributed ~nothing). The lesson: respect the data's
+structure (locality, known nuisance transforms) before reaching for a heavier
+generator.
+
+![real vs generated spectra](benchmarks/plots/generated_spectra.png)
 
 ### Calibration transfer (simulated secondary instrument)
 Mean over 25 random splits (n=48 is tiny, so single splits are noisy). A model

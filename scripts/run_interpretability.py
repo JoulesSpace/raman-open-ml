@@ -38,20 +38,20 @@ _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PLOTS_DIR = os.path.join(_ROOT, "benchmarks", "plots")
 
 
-def _plot(wn, importance, mean_spec, title, path, k=6):
+def _plot(wn, importance, mean_spec, title, path, k=6,
+          label="SHAP importance (scaled)", color="#C44E52", annotate=True):
     order = np.argsort(wn)
     wn, importance, mean_spec = wn[order], importance[order], mean_spec[order]
     imp_n = importance / (importance.max() + 1e-12)
     fig, ax = plt.subplots(figsize=(9, 4.2))
     ax.plot(wn, mean_spec / (mean_spec.max() + 1e-12), color="0.6", lw=1,
             label="mean spectrum (scaled)")
-    ax.fill_between(wn, imp_n, color="#C44E52", alpha=0.5,
-                    label="SHAP importance (scaled)")
+    ax.fill_between(wn, imp_n, color=color, alpha=0.5, label=label)
     peaks = top_peaks(importance, wn, k=k)
-    for w, _ in peaks:
-        ax.axvline(w, color="#C44E52", lw=0.6, ls=":")
-        ax.annotate(f"{w:.0f}", (w, 1.02), fontsize=7, ha="center",
-                    color="#C44E52")
+    if annotate:
+        for w, _ in peaks:
+            ax.axvline(w, color=color, lw=0.6, ls=":")
+            ax.annotate(f"{w:.0f}", (w, 1.02), fontsize=7, ha="center", color=color)
     ax.set_xlabel("wavenumber (cm$^{-1}$)")
     ax.set_ylabel("scaled intensity / importance")
     ax.set_title(title)
@@ -92,9 +92,13 @@ def main():
         cnn = CNNClassifier(n_out=30, epochs=12, batch_size=128, arch="resnet",
                             resnet_base=16, seed=0).fit(Xc[idx], yc[idx])
         cam = grad_cam_1d(cnn, Xc[idx][:200]).mean(0)
+        # Grad-CAM on a strided 1-D ResNet is a coarse class-activation envelope
+        # (the deep feature map is heavily downsampled), so peak-level vlines would
+        # be misleading - show the envelope only, labelled honestly.
         _plot(wn_c, cam, Xc[idx].mean(0),
-              "Grad-CAM wavenumber importance - bacteria-ID (1D-CNN)",
-              os.path.join(PLOTS_DIR, "gradcam_classification.png"))
+              "Grad-CAM class-activation envelope - bacteria-ID (1D-ResNet)",
+              os.path.join(PLOTS_DIR, "gradcam_classification.png"),
+              label="Grad-CAM activation (scaled)", color="#4C72B0", annotate=False)
         print("Saved gradcam_classification.png")
     except Exception as e:  # noqa: BLE001
         print(f"Grad-CAM step skipped: {e}")

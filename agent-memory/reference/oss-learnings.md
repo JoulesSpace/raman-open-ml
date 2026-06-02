@@ -28,7 +28,7 @@ framework/chemometrics repos. Everything below is "novel idea vs wrapper" and
   `SpectroPCA` (BoxSERS-style: loadings-as-spectra + scatter). PCA/t-SNE/UMAP/MDS
   are the standard exploratory embeddings.
 - **XAI**: Grad-CAM (`interpretability.grad_cam_1d`) + SHAP
-  (`shap_wavenumber_importance`, Tree/Linear/Kernel dispatch from AutoML platform) +
+  (`shap_wavenumber_importance`, Tree/Linear/Kernel dispatch) +
   the existing Integrated Gradients. SHAP flags chemically-correct bands
   (785/1006 cm-1 bacteria; 992-1025 cm-1 polystyrene).
 

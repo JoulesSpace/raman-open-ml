@@ -17,9 +17,9 @@ charts and leaderboard tables; **t-SNE / UMAP** embedding scatter; **saliency /
 Grad-CAM** peak attribution; **reliability (calibration) diagrams**; training
 loss/accuracy curves.
 
-### AutoML platform platform
-XAI only: **SHAP** mean-|SHAP| feature-importance ranking (`explainability/shap.py`).
-No spectroscopy-specific plots (it is a tabular/CV/NLP platform).
+### General ML / AutoML platforms
+XAI only: SHAP mean-|SHAP| feature-importance ranking. No spectroscopy-specific
+plots (these are general tabular / CV / NLP tools).
 
 ### This repo (`benchmarks/plots/`)
 - `classification_accuracy.png` - accuracy bar per classifier

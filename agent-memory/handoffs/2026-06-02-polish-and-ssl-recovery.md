@@ -5,10 +5,10 @@ date: 2026-06-02
 tags: [handoff]
 ---
 
-# Handoff 2026-06-02: polish pass (release polish)
+# Handoff 2026-06-02: polish pass
 
 Follow-up to [[2026-06-02-first-build]]. Focus: make the repo presentation-grade
-(presentation quality) and close the remaining honest negatives.
+and close the remaining honest negatives.
 
 ## What changed this session
 

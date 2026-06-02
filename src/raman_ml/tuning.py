@@ -1,6 +1,6 @@
 """Hyperparameter tuning for the classical models: grid / random / Bayesian.
 
-Adapted (streamlined) from the AutoML platform ml-training tuning module. A single
+A single
 ``tune`` entry point dispatches to:
 
 * ``grid``   - exhaustive GridSearchCV,

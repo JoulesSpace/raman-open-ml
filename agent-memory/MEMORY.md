@@ -25,7 +25,6 @@ follow the links. How this store is organised: [README.md](README.md).
 
 ## Reference (external research)
 - [SOTA Raman ML synthesis](reference/sota-raman-ml.md) - architectures, OSS landscape, transferable methods, open problems (cited)
-- [Engineering from AutoML platform](reference/engineering-notes.md) - MLOps practices borrowed (Makefile, ruff/pre-commit/CI); what we kept ahead on
 - [Competitive analysis](reference/competitive-analysis.md) - criterion-by-criterion scorecard vs SOTA + OSS; where we lead and trail
 - [OSS learnings (10+ repos)](reference/oss-learnings.md) - BoxSERS/rampy/peak-fitting/chemometrics; adopted vs wrapper vs roadmap (MCR-ALS, SSL, ...)
 - [Plots & metrics catalog](../benchmarks/PLOTS_AND_METRICS.md) - plot types (common practice/SOTA/ours) + metric->model mapping

@@ -121,7 +121,6 @@ def shap_explainer(model, background):
 
     Tree models -> exact TreeExplainer; linear models -> LinearExplainer;
     anything else -> model-agnostic KernelExplainer (slow on 1000 wavenumbers).
-    Dispatch mirrors the AutoML platform ml-training explainability module.
     """
     import shap
     name = model.__class__.__name__.lower()

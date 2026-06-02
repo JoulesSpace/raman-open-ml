@@ -64,4 +64,15 @@ SE-ResNet ensemble (0.852) on our protocol. The paper reports multi-scale > plai
 ResNet, so our quick port (3 stages, base 64) likely under-replicates SANet's
 depth/width/tuning. Reported honestly; the plain SE-ResNet ensemble (0.852)
 remains our best, beating Ho 2019 (0.822) and trailing SANet (0.861) / SE-ResNet
-2024 (0.878). Closing that gap is roadmap item 2 (SSL pretraining).
+2024 (0.878). The later heterogeneous mix + TTA reached 0.862, clearing SANet.
+
+## Honest result note (self-supervised pretraining, now implemented)
+SSL is no longer a roadmap item. `SpectralMAE` masked-autoencoder pretraining on
+63k unlabelled spectra + a fine-tuned 5-member ensemble reaches **0.711** (single
+0.702 +/- 0.004, ensemble + TTA 0.711). The first attempt globally average-pooled
+the encoder output before the head and scored only 0.36 - it discarded the local
+peak structure. Replacing the head with a spatial-feature head (keep the conv
+feature map, AdaptiveAvgPool to a small grid, then Linear) recovered it to 0.711.
+SSL still trails the supervised ensemble (0.862): with 60k labelled reference
+spectra there is little label scarcity for SSL to exploit. Value = the diagnosis
+and a working config, reported honestly.

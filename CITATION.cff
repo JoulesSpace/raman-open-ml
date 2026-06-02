@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+title: "raman-open-ml: trustworthy, reproducible machine learning for Raman spectroscopy"
+message: "If you use this software, please cite it using these metadata."
+type: software
+authors:
+  - name: "raman-open-ml contributors"
+repository-code: "https://github.com/JoulesSpace/raman-ml"
+abstract: >
+  An open-source toolkit for Raman spectroscopy machine learning on public,
+  openly-licensed data. It covers classification and concentration
+  quantification and adds the trustworthy-ML layer the field keeps flagging as
+  open: uncertainty quantification (conformal prediction, temperature scaling,
+  deep ensembles), open-set / out-of-distribution rejection, calibration
+  transfer across instruments, and domain-shift-aware evaluation.
+keywords:
+  - Raman spectroscopy
+  - machine learning
+  - chemometrics
+  - conformal prediction
+  - out-of-distribution detection
+  - calibration transfer
+  - domain shift
+license: AGPL-3.0-or-later
+version: 0.1.0

@@ -48,7 +48,9 @@ numbers with these caveats.
   this is not evidence CNNs are worse for quantification in general.
 
 ## Not yet done
-- No SSL pretraining, no GAN/diffusion augmentation, no CARS/VIP selection.
+- SSL pretraining is now implemented (`SpectralMAE`, 0.711) but does not beat the
+  supervised ensemble (0.862) on this label-rich set. No GAN/diffusion augmentation.
+  VIP selection exists (`variable_selection.py`); no CARS yet.
 - No real multi-instrument dataset; no cross-dataset (RRUFF/MLROD) eval.
 - Deep ensembles and Integrated-Gradients interpretability now exist as modules
   (`models.DeepEnsemble`, `interpretability.py`) but are not yet wired into the

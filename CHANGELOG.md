@@ -24,6 +24,18 @@ follows [Keep a Changelog](https://keepachangelog.com/); versions follow semver.
   selection; peak-feature extraction.
 - Tooling: pytest suite, ruff, pre-commit, GitHub Actions CI, Makefile,
   hero infographic + cost-vs-quality comparison plots.
+- `plot_preprocessing_showcase.py`: preprocessing-cascade and baseline-method
+  comparison figures (DeepeR-style method overlay).
+- CV-weighted regression ensemble (`models.WeightedEnsembleRegressor`).
+- CITATION.cff.
+
+### Results
+- Self-supervised `SpectralMAE` pretraining: fixed the global-pool bottleneck
+  (0.36) with a spatial-feature head -> **0.711** (5-member + TTA). Still below the
+  supervised ensemble (0.862), as expected on this label-rich set.
+- Quantification ensemble (PLSR+SVR+RF+kNN, CV-weighted) = R² 0.833, below
+  RandomForest alone (0.848): an honest negative for stacking when one model
+  dominates a small set.
 
 ### Fixed
 - Mahalanobis OOD: pooled within-class covariance now uses the correct

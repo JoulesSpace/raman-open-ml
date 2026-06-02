@@ -49,8 +49,10 @@ open-world SOTA (0.878). We also add the trust layer none of them ship: RAPS
 conformal coverage 0.938 (target 0.90), average set size **1.39/30**, ECE
 0.073 -> 0.025 after temperature scaling. The single-architecture variants were
 weaker: plain SE-ResNet ensemble 0.852, multi-scale-only ensemble 0.844 - the
-*diversity* of the heterogeneous mix plus TTA is what cleared SANet. Closing the
-last 1.5 pts to 0.878 is the SSL-pretraining roadmap item.
+*diversity* of the heterogeneous mix plus TTA is what cleared SANet. Self-supervised
+masked-AE pretraining was implemented (`SpectralMAE`, 0.711) but does not beat the
+supervised ensemble here - with 60k labelled reference spectra there is little label
+scarcity for it to exploit; closing the last 1.5 pts to 0.878 remains open.
 
 ### 1D-ResNet
 - **Arch:** strided/residual 1-D CNN (stem conv + 4 residual stages, adaptive

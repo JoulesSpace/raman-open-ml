@@ -40,15 +40,16 @@ honest scorecard. ✅ = strong / present, ◑ = partial, ❌ = absent.
 - **Accuracy: we beat the foundational paper (0.862 vs Ho 0.822) AND the 2026
   architecture SOTA SANet (0.861)**, via an 8-member heterogeneous ensemble
   (SE-ResNet + multi-scale) with TTA. We sit ~1.5 pts below the open-world SOTA
-  (0.878); closing that is the SSL-pretraining roadmap item. Our durable edge is
-  the trust layer they lack.
+  (0.878). SSL pretraining is now implemented (`SpectralMAE`, 0.711) but does not
+  close that gap on this label-rich set; our durable edge is the trust layer they
+  lack.
 - **We trail RamanSPy** on raw preprocessing breadth and number of bundled
   datasets, and we **lack hosted pretrained weights** (bacteria-ID ships them).
 
 ## To unambiguously be "the best" (remaining work)
 
-1. **Exceed 0.878** classification: multi-scale ensemble (running), + more members
-   / SSL pretraining if needed.
+1. **Exceed 0.878** classification: more ensemble members / deeper SANet port;
+   SSL alone (0.711) does not get there on this label-rich set.
 2. **Hosted model zoo + cards** (HuggingFace Hub) so others can `from_pretrained`.
 3. **Breadth**: add a 3rd dataset (RRUFF or MLROD) for true cross-dataset shift,
    and a couple more preprocessing options to approach RamanSPy parity.

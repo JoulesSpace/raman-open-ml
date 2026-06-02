@@ -31,11 +31,14 @@ No spectroscopy-specific plots (it is a tabular/CV/NLP platform).
 - `calibration_transfer.png` - R² in-domain / shifted / PDS-corrected
 - `shap_classification.png`, `shap_quantification.png` - **SHAP per-wavenumber peak attribution**
 - `shap_classification_byclass.png` - **per-class SHAP heatmap** (which bands distinguish each of the 30 isolates)
-- `gradcam_classification.png` - Grad-CAM wavenumber importance (1D-CNN)
+- `gradcam_classification.png` - Grad-CAM class-activation envelope (1D-ResNet); coarse by design (deep feature map is downsampled), complements the sharp SHAP attribution
 - `dimreduction_*.png`, `pca_*.png` - embeddings + PCA score/scree plots
+- `preprocessing_cascade.png` - one spectrum through raw -> despike -> baseline -> SNV -> SG-derivative
+- `baseline_comparison.png` - **five baseline estimators overlaid** (ALS/arPLS/airPLS/ModPoly/SNIP) + corrected results, DeepeR-style method comparison
 
 We cover the common set (spectra/confusion/parity/PCA), add the SOTA staples
-(calibration-aware + attribution), and skip pure-aesthetic overlays.
+(calibration-aware + attribution) and the preprocessing showcase, and skip
+pure-aesthetic overlays.
 
 ## Metric -> model mapping
 
@@ -46,7 +49,7 @@ We cover the common set (spectra/confusion/parity/PCA), add the SOTA staples
 | **Calibration of a classifier** | any probabilistic classifier / ensemble | ECE (Expected Calibration Error), temperature T |
 | **Conformal classification** | any classifier with probabilities | set coverage (vs 1-alpha target), average set size |
 | **Open-set / OOD** | classifier + MSP / Energy / Mahalanobis | AUROC, FPR@95%TPR, closed-set accuracy |
-| **Quantification** | PLSR, PLSR+VIP, PCR, SVR, kNN, RandomForest, 1D-CNN | R² (pooled CV), RMSE & MAE in log10 units, per-fold R² mean ± std |
+| **Quantification** | PLSR, PLSR+VIP, PCR, SVR, kNN, RandomForest, 1D-CNN, CV-weighted ensemble | R² (pooled CV), RMSE & MAE in log10 units, per-fold R² mean ± std |
 | **Conformal / interval regression** | any regressor | interval coverage (vs 1-alpha), mean interval width |
 | **Calibration transfer** | PLSR, SVR, RandomForest | R²: in-domain vs secondary-instrument vs PDS-corrected |
 | **Hyperparameter tuning** | any sklearn estimator | best CV score under the chosen `scoring` (grid/random/Bayes) |

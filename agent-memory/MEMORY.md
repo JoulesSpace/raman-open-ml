@@ -5,7 +5,7 @@ read first each session, and kept current as work happens. Start here, then
 follow the links. How this store is organised: [README.md](README.md).
 
 ## Start here
-- [Latest handoff - first build (2026-06-02)](handoffs/2026-06-02-first-build.md) - what exists, results, next steps
+- [Latest handoff - polish pass (2026-06-02)](handoffs/2026-06-02-polish-and-ssl-recovery.md) - SSL recovery 0.711, regression ensemble, showcase plots, AGPL, badges/citation
 - [Honest limitations](notes/honest-limitations.md) - read before quoting numbers
 - [Method notes](notes/methods.md) - preprocessing, models, evaluation in one place
 - [Dataset notes](notes/datasets.md) - shapes and quirks of both datasets
@@ -35,4 +35,5 @@ follow the links. How this store is organised: [README.md](README.md).
 - [Dataset notes](notes/datasets.md) - bacteria-ID and polystyrene specifics
 
 ## Handoffs (session log, newest first)
+- [2026-06-02 - polish pass](handoffs/2026-06-02-polish-and-ssl-recovery.md) - SSL 0.711, regression ensemble, showcase plots, AGPL, badges/citation
 - [2026-06-02 - first build](handoffs/2026-06-02-first-build.md) - scaffold, baselines, trust layer, domain-shift study

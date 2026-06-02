@@ -1,5 +1,11 @@
 # raman-open-ml
 
+[![CI](https://github.com/JoulesSpace/raman-ml/actions/workflows/ci.yml/badge.svg)](https://github.com/JoulesSpace/raman-ml/actions/workflows/ci.yml)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](pyproject.toml)
+[![Code style: Ruff](https://img.shields.io/badge/lint-ruff-261230.svg)](https://github.com/astral-sh/ruff)
+[![Tests: 39](https://img.shields.io/badge/tests-39_passing-2a9d8f.svg)](tests/test_core.py)
+
 **A trustworthy, reproducible machine-learning toolkit for Raman spectroscopy**,
 built on public, openly-licensed data. It does the classic Raman workflow
 (classify the analyte, quantify its concentration) **and** adds the layer the
@@ -24,8 +30,8 @@ result, so the thinking process is auditable end to end:
 | `run_classification.py` | flat cross-domain baselines (LogReg/SVM/RF/1D-CNN), seed-variance bars | LogReg 0.474 (cross-domain; see domain shift) |
 | `run_domain_shift.py` | in-distribution vs cross-domain vs adapted (4 models) + temp-scaling + conformal | 1D-ResNet **0.940** in-dist -> 0.55 shift -> 0.76 adapted |
 | `run_sota_classification.py` | pretrain -> fine-tune -> heterogeneous ensemble + TTA | **0.862** (beats Ho 0.822 & SANet 0.861) |
-| `run_ssl_classification.py` | self-supervised masked-AE pretraining + fine-tuned ensemble | see SSL note (honest negative / improved variant) |
-| `run_quantification.py` | PLSR/PCR/SVR/kNN/RF/1D-CNN + SD-augmentation + CV | RandomForest **R²=0.848** |
+| `run_ssl_classification.py` | self-supervised masked-AE pretraining + fine-tuned ensemble | **0.711** (5-member + TTA; see SSL note) |
+| `run_quantification.py` | PLSR/PCR/SVR/kNN/RF/1D-CNN + CV-weighted ensemble + SD-augmentation + CV | RandomForest **R²=0.848** (ensemble 0.833) |
 | `run_pipeline.py` | **unified sweep**: baseline x norm x SG-deriv x DR x model + HPO | ALS+L2+SG-d1+RF -> 0.792, **HPO 0.808** |
 | `run_openset.py` | reject unknown isolates (MSP / energy / Mahalanobis) | AUROC ~0.75, closed-set 0.81 |
 | `run_calibration_transfer.py` | guarded PDS transfer + jackknife+ intervals | guarded R²: PLSR 0.46 / SVR 0.50 / RF 0.63; coverage 0.95 |
@@ -34,7 +40,8 @@ result, so the thinking process is auditable end to end:
 | `run_interpretability.py` | SHAP + Grad-CAM + Integrated Gradients attribution | bands at 785 / 1006 cm⁻¹ (DNA / Phe) |
 | `run_shap_overview.py` | per-class SHAP heatmap over all 30 isolates | yeasts key on 1047 cm⁻¹, bacteria on 785/1007 |
 | `plot_comparison.py`, `infographic.py` | cost-vs-quality Pareto + the hero figure | - |
-| `pytest` | **38 fast unit tests** of every module (no downloads/GPU) | all green in CI |
+| `plot_preprocessing_showcase.py` | preprocessing cascade + baseline-method comparison figures | - |
+| `pytest` | **39 fast unit tests** of every module (no downloads/GPU) | all green in CI |
 
 ## Why this exists
 
@@ -163,6 +170,10 @@ GPU automatically when available, else CPU. Hyperparameter tuning is detailed in
 <td width="50%"><img src="benchmarks/plots/dimreduction_bacteria.png" alt="dimensionality reduction" width="100%"><br><sub><b>Dimensionality reduction</b> &middot; PCA / t-SNE / UMAP / MDS / LDA, scored by class separability</sub></td>
 <td width="50%"><img src="benchmarks/plots/classification_confusion.png" alt="confusion matrix" width="100%"><br><sub><b>Confusion matrix</b> &middot; 30-class isolate predictions (row-normalised)</sub></td>
 </tr>
+<tr>
+<td width="50%"><img src="benchmarks/plots/preprocessing_cascade.png" alt="preprocessing cascade" width="100%"><br><sub><b>Preprocessing cascade</b> &middot; one spectrum through raw -> despike -> baseline -> SNV -> SG-derivative</sub></td>
+<td width="50%"><img src="benchmarks/plots/baseline_comparison.png" alt="baseline method comparison" width="100%"><br><sub><b>Baseline-method comparison</b> &middot; ALS / arPLS / airPLS / ModPoly / SNIP overlaid; arPLS is most robust to dominant peaks</sub></td>
+</tr>
 </table>
 
 **Per-class diagnostic bands.** A per-class SHAP map over all 30 isolates shows
@@ -194,6 +205,7 @@ See [benchmarks/MODEL_CARDS.md](benchmarks/MODEL_CARDS.md).
 | Model | R² | RMSE (log10) |
 |-------|---:|-------------:|
 | **RandomForest** | **0.848** | 0.201 |
+| Ensemble (PLSR+SVR+RF+kNN, CV-weighted) | 0.833 | 0.210 |
 | SVR (rbf) | 0.830 | 0.212 |
 | 1D-CNN | 0.768 | 0.247 |
 | kNN | 0.690 | 0.286 |
@@ -203,11 +215,35 @@ See [benchmarks/MODEL_CARDS.md](benchmarks/MODEL_CARDS.md).
 
 ![quantification](benchmarks/plots/quantification_r2.png)
 
+The CV-weighted ensemble (`models.WeightedEnsembleRegressor`) lands at R²=0.833,
+**below** RandomForest alone (0.848): on this small, single-analyte set one model
+clearly dominates, so blending it with weaker learners (PLSR/kNN) dilutes rather
+than helps. An honest negative for stacking here, and the reason we report the
+single best model as the headline.
+
 ### Open-set rejection of unknown isolates
 Closed-set accuracy 0.807; OOD AUROC ~0.73-0.75 (MSP / Energy / Mahalanobis).
 Open-set Raman is genuinely hard (unknowns are spectrally close to knowns) - the
 detectors give real signal above chance, and the task being unsolved is exactly
 why it is a stated open problem.
+
+### Self-supervised pretraining (masked-autoencoder)
+`run_ssl_classification.py` pretrains a `SpectralMAE` on **unlabelled** spectra
+(reconstruct randomly masked wavenumber patches), then fine-tunes a 5-member
+ensemble + TTA for the 30-class task. The lesson here is in the debugging:
+
+| Variant | Test accuracy |
+|---------|--------------:|
+| naive head (global average pool) | 0.36 |
+| **spatial-feature head** (keep the conv feature map) | **0.711** |
+
+The first attempt globally pooled the encoder output and threw away exactly the
+local peak structure that distinguishes isolates - hence 0.36. Keeping the
+spatial feature map under the classification head recovered it to **0.711**.
+Self-supervision still trails the supervised ensemble (0.862) on this dataset,
+which is expected: with 60k labelled reference spectra available, masked-AE
+pretraining has little label scarcity to exploit. The value is the diagnosis,
+the working configuration, and an honest comparison rather than a buried result.
 
 ### Calibration transfer (simulated secondary instrument)
 Mean over 25 random splits (n=48 is tiny, so single splits are noisy). A model
@@ -366,9 +402,11 @@ Key works behind the methods (full cited synthesis in
 - *Benchmarking Deep Learning Models for Raman Spectroscopy Across Open-Source Datasets*, arXiv:2601.16107 (2026) - SANet 86.1%; documents the val->test distribution-shift gap.
 - Lebron et al., *Enhancing Open-World Bacterial Raman Spectra Identification...*, Chem. Biomed. Imaging 2024 - SE-ResNet ensemble 87.8% + open-set rejection.
 - Ibtehaz et al., *RamanNet*, Neural Comput. Appl. 2023; SMAE (masked-AE SSL), arXiv:2504.16130 (2025).
+- Horgan et al., *High-Throughput Molecular Imaging via Deep-Learning-Enabled Raman Spectroscopy* (DeepeR), Anal. Chem. 2021 - 1D ResUNet denoising + hyperspectral super-resolution; the method-comparison plot style here is inspired by its figures.
 
 **Open-source tooling**
 - Georgiev et al., *RamanSPy*, Anal. Chem. 2024; `pybaselines`; BoxSERS; rampy.
+- Coca-Lopez, *Data Science for Raman Spectroscopy: a practical example* (B-Phot workshop, 2022) - a clear from-scratch teaching notebook (despiking, ALS/polynomial baseline, SNV, CLS unmixing); confirms our preprocessing suite covers the standard workflow.
 
 **Uncertainty, OOD & transfer**
 - Romano et al., *Conformalized Quantile Regression*, NeurIPS 2019; Angelopoulos et al., *RAPS*, ICLR 2021; Barber et al., *jackknife+*, Ann. Stat. 2021.

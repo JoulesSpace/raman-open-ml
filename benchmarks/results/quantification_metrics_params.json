@@ -1,0 +1,8 @@
+{
+  "n_aug": 40,
+  "pls_components": 3,
+  "cnn_epochs": 60,
+  "cv_splits": 5,
+  "cv_repeats": 3,
+  "seed": 0
+}

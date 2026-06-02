@@ -4,5 +4,6 @@
   "finetune_epochs": 40,
   "base": 64,
   "tta": 8,
+  "encoder_path": "",
   "seed": 0
 }

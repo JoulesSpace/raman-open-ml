@@ -180,9 +180,15 @@ def main():
            color="#55A868")
     ax.set_xticks(x); ax.set_xticklabels(df["model"])
     ax.set_ylabel("R2 (relative log10 conc)")
-    ax.set_ylim(min(-0.2, df["r2_secondary_pds"].min()), 1)
+    # Only extend the axis below zero if some bar is actually negative (unguarded
+    # PDS can hurt); when every value is positive, start at 0 - no empty negative band.
+    lo = min(0.0, df[["r2_secondary_no_transfer", "r2_secondary_pds",
+                      "r2_secondary_guarded"]].to_numpy().min())
+    ax.set_ylim(lo - 0.02 if lo < 0 else 0.0, 1)
     ax.set_title("Calibration transfer: guarded PDS only transfers when it helps")
-    ax.axhline(0, color="k", lw=0.6); ax.legend(fontsize=7.5)
+    if lo < 0:
+        ax.axhline(0, color="k", lw=0.6)
+    ax.legend(fontsize=7.5)
     fig.tight_layout()
     fig.savefig(os.path.join(PLOTS_DIR, "calibration_transfer.png"), dpi=130)
     print("Saved benchmarks/plots/calibration_transfer.png")

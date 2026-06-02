@@ -194,15 +194,19 @@ def main():
 
     best = df.iloc[0]["model"]
 
-    # R2 bar chart
-    fig, ax = plt.subplots(figsize=(7, 4))
-    ax.bar(df["model"], df["R2"].clip(lower=0), color="#55A868")
+    # R2 bar chart. Shorten the verbose ensemble name so it does not collide with
+    # the neighbouring tick (full composition lives in the title note + the table).
+    labels = ["Ensemble" if m.startswith("Ensemble") else m for m in df["model"]]
+    fig, ax = plt.subplots(figsize=(8.5, 4.4))
+    ax.bar(range(len(df)), df["R2"].clip(lower=0), color="#55A868")
     ax.set_ylabel("R^2 (CV, relative log10 concentration)")
     ax.set_ylim(0, 1)
-    ax.set_title("Polystyrene quantification: algorithm comparison")
+    ax.set_title("Polystyrene quantification: algorithm comparison\n"
+                 "(Ensemble = CV-weighted PLSR+SVR+RF+kNN)", fontsize=11)
     for i, v in enumerate(df["R2"]):
         ax.text(i, max(v, 0) + 0.01, f"{v:.2f}", ha="center", fontsize=9)
-    plt.xticks(rotation=20)
+    ax.set_xticks(range(len(df)))
+    ax.set_xticklabels(labels, rotation=30, ha="right")
     fig.tight_layout()
     fig.savefig(os.path.join(PLOTS_DIR, "quantification_r2.png"), dpi=130)
 

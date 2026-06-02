@@ -123,6 +123,30 @@ def test_pds_reduces_transfer_error():
     assert err_after < err_before
 
 
+def test_apply_transfer_if_improves_guard():
+    # exercise the guard's decision logic with stub transforms (independent of
+    # PDS reconstruction quality)
+    from sklearn.linear_model import LinearRegression
+
+    class _Stub:
+        def __init__(self, fn): self.fn = fn
+        def transform(self, X): return self.fn(np.asarray(X, float))
+
+    rng = np.random.default_rng(0)
+    prim = rng.normal(0, 1, (40, 6))
+    yv = prim[:, 1] * 2 + rng.normal(0, 0.05, 40)
+    model = LinearRegression().fit(prim[:20], yv[:20])
+    sec = prim * 1.5 + 0.4                                    # affine shift
+    good = _Stub(lambda X: (X - 0.4) / 1.5)                   # recovers primary
+    _, used = ct.apply_transfer_if_improves(model, good, sec[20:30], yv[20:30],
+                                            sec[30:])
+    assert used                                              # transfer clearly helps
+    bad = _Stub(lambda X: X + rng.normal(0, 5, X.shape))     # only adds noise
+    out, used2 = ct.apply_transfer_if_improves(model, bad, prim[20:30], yv[20:30],
+                                               prim[30:])
+    assert not used2 and np.allclose(out, prim[30:])         # falls back to raw
+
+
 def test_select_transfer_standards_unique():
     X = np.random.default_rng(0).normal(0, 1, (50, 20))
     idx = ct.select_transfer_standards(X, n=10)
@@ -166,6 +190,25 @@ def test_deep_ensemble_classifier_runs():
     proba = ens.predict_proba(X)
     assert proba.shape == (len(X), 2)
     assert np.allclose(proba.sum(1), 1.0, atol=1e-5)
+
+
+def test_weighted_ensemble_regressor():
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn.linear_model import LinearRegression
+    from sklearn.metrics import r2_score
+
+    from raman_ml.models import WeightedEnsembleRegressor
+    rng = np.random.default_rng(0)
+    X = rng.normal(0, 1, (120, 6))
+    y = X[:, 0] * 2 - X[:, 2] + rng.normal(0, 0.1, 120)
+    ens = WeightedEnsembleRegressor(
+        factories=[lambda: LinearRegression(),
+                   lambda: RandomForestRegressor(60, random_state=0)],
+        weights="cv", cv=4).fit(X[:90], y[:90])
+    pred = ens.predict(X[90:])
+    assert pred.shape == (30,)
+    assert abs(ens.weights_.sum() - 1.0) < 1e-9
+    assert r2_score(y[90:], pred) > 0.8     # ensemble tracks a learnable target
 
 
 def test_vip_scores_and_selection():
@@ -345,6 +388,27 @@ def test_cnn_save_load_roundtrip(tmp_path):
 def test_set_global_determinism_runs():
     from raman_ml.models import set_global_determinism
     set_global_determinism(0)  # must not raise on CPU or GPU
+
+
+def test_shap_per_class_importance_optional():
+    pytest.importorskip("shap")
+    from sklearn.ensemble import RandomForestClassifier
+
+    from raman_ml.interpretability import shap_per_class_importance
+    rng = np.random.default_rng(0)
+    L = 40
+    y = rng.integers(0, 3, 120)
+    # each class has its own discriminative band
+    band = {0: 8, 1: 20, 2: 32}
+    X = rng.normal(0, 0.2, (120, L))
+    for i, c in enumerate(y):
+        X[i, band[c]] += 3.0
+    rf = RandomForestClassifier(n_estimators=120, random_state=0).fit(X, y)
+    imp = shap_per_class_importance(rf, X, X, y)
+    assert imp.shape == (3, L)
+    # each class's own band should be among its most important wavenumbers
+    for c in range(3):
+        assert band[c] in set(np.argsort(-imp[c])[:5])
 
 
 def test_gradcam_1d_runs():

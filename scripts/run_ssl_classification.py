@@ -41,6 +41,7 @@ def main():
     ap.add_argument("--finetune-epochs", type=int, default=40)
     ap.add_argument("--base", type=int, default=64)
     ap.add_argument("--tta", type=int, default=8)
+    ap.add_argument("--encoder-path", default="", help="cache/reuse pretrained MAE")
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
     os.makedirs(RESULTS_DIR, exist_ok=True)
@@ -51,11 +52,19 @@ def main():
     X_unlab = np.vstack([Xr, Xf])              # inputs only, no labels, no test
     print(f"pretrain(unlabelled)={X_unlab.shape}  finetune={Xf.shape}  test={Xt.shape}")
 
-    t0 = time.time()
+    enc_path = args.encoder_path or os.path.join(
+        RESULTS_DIR, f"mae_encoder_base{args.base}.pt")
     template = MAEClassifier(n_out=30, base=args.base,
-                             pretrain_epochs=args.pretrain_epochs, seed=args.seed)
-    template.pretrain(X_unlab)
-    print(f"  MAE pretraining done ({time.time() - t0:.0f}s)")
+                             pretrain_epochs=args.pretrain_epochs,
+                             finetune_epochs=args.finetune_epochs, seed=args.seed)
+    if os.path.exists(enc_path):
+        template.load_encoder(enc_path)
+        print(f"  loaded cached MAE encoder: {enc_path}")
+    else:
+        t0 = time.time()
+        template.pretrain(X_unlab)
+        template.save_encoder(enc_path)
+        print(f"  MAE pretraining done ({time.time() - t0:.0f}s), cached -> {enc_path}")
 
     tta = SpectralAugment(noise=0.005, offset=0.005, slope=0.005,
                           mult=(0.98, 1.02), shift=2, p=0.7, seed=99)

@@ -98,11 +98,13 @@ SD-augmentation help but do not overtake RF). PLSR/PCR trail because pooling
 particle sizes turns the mapping nonlinear (see
 `agent-memory/insights/pls-fails-cross-size-pooling.md`).
 
-**Trust layer for quantification:** jackknife+ prediction intervals (stable at
-small n) and PDS calibration transfer. PDS recovers SVR (R^2 -0.03 -> 0.48) and
-RandomForest (0.39 -> 0.61) under a simulated secondary-instrument response;
-PLSR is already shift-robust here so PDS can over-correct it - a reminder that
-transfer should be applied where a model actually degrades.
+**Trust layer for quantification:** jackknife+ prediction intervals (0.95
+coverage at target 0.90 after the finite-sample correction) and **guarded** PDS
+calibration transfer. Averaged over 25 splits, guarded PDS (transfer only when it
+improves a held-out secondary check) recovers all models under a simulated
+secondary-instrument response - RandomForest 0.45 -> 0.63, SVR 0.04 -> 0.50,
+PLSR 0.37 -> 0.46 - without the over-correction that drives unguarded PDS
+negative on shift-robust PLSR on an unlucky single split.
 
 ---
 

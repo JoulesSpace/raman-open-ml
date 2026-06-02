@@ -74,8 +74,8 @@ src/raman_ml/      preprocessing (ALS/arPLS/airPLS/ModPoly/IModPoly/SNIP/
 scripts/           download_data, run_classification, run_quantification,
                    run_domain_shift, run_sota_classification, run_openset,
                    run_calibration_transfer, run_pca_explore, run_dimreduction,
-                   run_interpretability, plot_comparison, infographic,
-                   folderinfo (lint)
+                   run_interpretability, run_shap_overview, run_ssl_classification, run_pipeline,
+                   plot_comparison, infographic, folderinfo (lint)
 benchmarks/        results/ (CSV metrics), plots/ (PNG), MODEL_CARDS.md,
                    PLOTS_AND_METRICS.md, README
 data/              datasets - git-ignored contents (.gitkeep + .folderinfo only)

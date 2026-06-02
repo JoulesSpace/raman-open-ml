@@ -160,3 +160,34 @@ def shap_wavenumber_importance(model, X_background, X_explain,
         axes = tuple(a for a in range(3) if a != l_axis)
         return np.abs(vals).mean(axis=axes)
     return np.abs(vals).mean(axis=0)
+
+
+def shap_per_class_importance(model, X_background, X_explain, y_explain=None,
+                              max_background=100, seed=0):
+    """Per-class mean |SHAP| per wavenumber for a multiclass model.
+
+    Returns (n_classes, n_wavenumbers): for class c, the average |SHAP value for
+    class c| over the explained samples whose true label is c (or over all
+    samples if labels are not given) - i.e. which bands drive *that* substance's
+    prediction. Feed this to a heatmap to see the diagnostic bands per class.
+    """
+    import shap  # noqa: F401
+    rng = np.random.default_rng(seed)
+    Xb = np.asarray(X_background, float)
+    if len(Xb) > max_background:
+        Xb = Xb[rng.choice(len(Xb), max_background, replace=False)]
+    Xe = np.asarray(X_explain, float)
+    vals = np.asarray(shap_explainer(model, Xb)(Xe).values)
+    if vals.ndim != 3:
+        raise ValueError("expected multiclass SHAP values of shape (n, L, C)")
+    n_classes = len(getattr(model, "classes_", range(vals.shape[-1])))
+    L = Xe.shape[1]
+    # normalise layout to (n, L, C)
+    if vals.shape[1] != L and vals.shape[2] == L:        # (n, C, L) or (C, n, L)
+        vals = np.moveaxis(vals, -1, 1)
+    out = np.zeros((n_classes, L))
+    y = None if y_explain is None else np.asarray(y_explain)
+    for c in range(n_classes):
+        m = (y == c) if (y is not None and np.any(y == c)) else slice(None)
+        out[c] = np.abs(vals[m, :, c]).mean(axis=0)
+    return out

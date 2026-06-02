@@ -56,6 +56,26 @@ class PiecewiseDirectStandardization:
         return Xs @ self.P_.T + self.intercept_
 
 
+def apply_transfer_if_improves(model, pds, X_secondary_val, y_val,
+                               X_secondary_apply, scorer=None):
+    """Guarded transfer: apply PDS to ``X_secondary_apply`` only if it improves
+    ``model``'s score on a labelled secondary validation set; otherwise return
+    the raw secondary spectra unchanged.
+
+    This prevents over-correction: a model that is already shift-robust (e.g.
+    low-component PLSR) can be *hurt* by an imperfect transfer, so we only
+    transfer where it demonstrably helps. Returns (X_out, used_pds: bool).
+    """
+    from sklearn.metrics import r2_score
+    scorer = scorer or r2_score
+    base = scorer(y_val, model.predict(np.asarray(X_secondary_val, float)))
+    mapped = scorer(y_val, model.predict(pds.transform(X_secondary_val)))
+    use = mapped > base
+    out = pds.transform(X_secondary_apply) if use else np.asarray(X_secondary_apply,
+                                                                  float)
+    return out, bool(use)
+
+
 def select_transfer_standards(X, n=10, seed=0):
     """Pick n diverse transfer standards via a simple k-center / max-min greedy.
 

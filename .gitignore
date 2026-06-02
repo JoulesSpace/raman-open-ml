@@ -12,6 +12,8 @@ __pycache__/
 .ruff_cache/
 build/
 dist/
+*.pt
+*.h5
 
 # Keep results small; comment out to version plots/metrics
 # results/

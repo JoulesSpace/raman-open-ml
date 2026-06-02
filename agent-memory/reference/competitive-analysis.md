@@ -28,7 +28,7 @@ honest scorecard. ✅ = strong / present, ◑ = partial, ❌ = absent.
 | Reproducible benchmark harness | ❌ | ❌ | ◑ (paper) | ❌ | ✅ (6 one-command scripts) |
 | Tests / CI / packaging | ✅ | ❌ | ❌ | ❌ | ✅ (33 tests, ruff, CI, pyproject) |
 | Pretrained model zoo (hosted) | ❌ | ✅ (weights) | ❌ | ❌ | ❌ (not yet) |
-| Permissive license | ✅ (BSD) | ✅ (MIT) | mixed | mixed | ✅ (MIT) |
+| OSI license | ✅ (BSD) | ✅ (MIT) | mixed | mixed | ✅ (AGPL-3.0, copyleft) |
 
 ## Verdict (honest)
 

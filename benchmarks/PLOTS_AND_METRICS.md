@@ -30,6 +30,9 @@ No spectroscopy-specific plots (it is a tabular/CV/NLP platform).
 - `pca_scree.png`, `pca_bacteria.png`, `pca_polystyrene.png` - PCA scree + score plots
 - `calibration_transfer.png` - R² in-domain / shifted / PDS-corrected
 - `shap_classification.png`, `shap_quantification.png` - **SHAP per-wavenumber peak attribution**
+- `shap_classification_byclass.png` - **per-class SHAP heatmap** (which bands distinguish each of the 30 isolates)
+- `gradcam_classification.png` - Grad-CAM wavenumber importance (1D-CNN)
+- `dimreduction_*.png`, `pca_*.png` - embeddings + PCA score/scree plots
 
 We cover the common set (spectra/confusion/parity/PCA), add the SOTA staples
 (calibration-aware + attribution), and skip pure-aesthetic overlays.

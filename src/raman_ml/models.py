@@ -491,6 +491,51 @@ class DeepEnsemble:
         return preds.mean(0), preds.std(0)
 
 
+class WeightedEnsembleRegressor:
+    """Heterogeneous weighted-average ensemble of regressors.
+
+    Combines diverse base models (e.g. PLSR + SVR + RandomForest + kNN) by
+    averaging their predictions. With ``weights="cv"`` each base model's weight is
+    its (non-negative) cross-validated R^2, so better and more-diverse models
+    contribute more - a simple, robust alternative to stacking that often beats
+    the best single model. ``factories`` is a list of zero-arg callables each
+    returning a fresh estimator (works with non-sklearn wrappers like PLS).
+    """
+
+    def __init__(self, factories, weights="cv", cv=5, seed=0):
+        self.factories = factories
+        self.weights = weights
+        self.cv = cv
+        self.seed = seed
+
+    def _cv_r2(self, factory, X, y):
+        from sklearn.metrics import r2_score
+        from sklearn.model_selection import KFold
+        scores = []
+        for tr, te in KFold(self.cv, shuffle=True,
+                            random_state=self.seed).split(X):
+            m = factory().fit(X[tr], y[tr])
+            scores.append(r2_score(y[te], np.ravel(m.predict(X[te]))))
+        return float(np.mean(scores))
+
+    def fit(self, X, y):
+        X, y = np.asarray(X), np.asarray(y)
+        if self.weights == "cv":
+            w = np.array([max(0.0, self._cv_r2(f, X, y)) for f in self.factories])
+            self.weights_ = w / w.sum() if w.sum() > 0 else np.ones(len(w)) / len(w)
+        elif self.weights == "equal":
+            self.weights_ = np.ones(len(self.factories)) / len(self.factories)
+        else:
+            w = np.asarray(self.weights, float)
+            self.weights_ = w / w.sum()
+        self.models_ = [f().fit(X, y) for f in self.factories]
+        return self
+
+    def predict(self, X):
+        preds = np.column_stack([np.ravel(m.predict(X)) for m in self.models_])
+        return preds @ self.weights_
+
+
 def load_cnn(path, map_location="cpu"):
     """Load a model saved by ``_BaseCNN.save`` and return a ready wrapper."""
     ckpt = torch.load(path, map_location=map_location, weights_only=False)

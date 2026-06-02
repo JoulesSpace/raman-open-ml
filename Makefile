@@ -40,6 +40,7 @@ benchmarks: bench
 	$(PY) scripts/run_calibration_transfer.py
 	$(PY) scripts/run_pca_explore.py
 	$(PY) scripts/run_interpretability.py
+	$(PY) scripts/run_shap_overview.py
 	$(PY) scripts/run_dimreduction.py
 
 .PHONY: figures

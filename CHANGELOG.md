@@ -32,6 +32,9 @@ follows [Keep a Changelog](https://keepachangelog.com/); versions follow semver.
   the small quantification set rose from ~0.75 to ~0.95 at a 0.90 target.
 - CNN regressor target standardisation (prevented divergence on log-conc targets).
 
+### Changed
+- License: MIT -> **AGPL-3.0-or-later** (strong copyleft, network-use clause).
+
 ### Notes
 - Best classification (official bacteria-ID protocol): heterogeneous ensemble +
   TTA = 0.862 (beats Ho 2019 0.822 and SANet 2026 0.861; below open-world 0.878).

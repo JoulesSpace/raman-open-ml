@@ -41,7 +41,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVR
 
 from raman_ml.datasets import load_polystyrene
-from raman_ml.models import CNNRegressor
+from raman_ml.models import CNNRegressor, WeightedEnsembleRegressor
 from raman_ml.preprocessing import remove_baseline
 from raman_ml.variable_selection import VIPSelectedPLSR
 
@@ -79,6 +79,16 @@ def make_models(args):
             n_estimators=300, n_jobs=-1, random_state=args.seed),
         "1D-CNN": lambda: CNNRegressor(epochs=args.cnn_epochs, batch_size=64,
                                        lr=1e-3, seed=args.seed),
+        # heterogeneous CV-weighted ensemble of the classical regressors
+        "Ensemble(PLSR+SVR+RF+kNN)": lambda: WeightedEnsembleRegressor(
+            factories=[
+                lambda: PLSWrapper(args.pls_components),
+                lambda: make_pipeline(StandardScaler(), SVR(C=10.0, gamma="scale")),
+                lambda: RandomForestRegressor(n_estimators=300, n_jobs=-1,
+                                              random_state=args.seed),
+                lambda: make_pipeline(StandardScaler(),
+                                      KNeighborsRegressor(n_neighbors=5)),
+            ], weights="cv", cv=5, seed=args.seed),
     }
 
 

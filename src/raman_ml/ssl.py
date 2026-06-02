@@ -50,8 +50,11 @@ class SpectralMAE(nn.Module):
         r = self.dec(self.enc(x))
         return F.interpolate(r, size=self.n_in, mode="linear", align_corners=False)
 
+    def feature_map(self, x):
+        return self.enc(x)              # (B, C, L') - keeps peak positions
+
     def embed(self, x):
-        return self.enc(x).mean(dim=2)
+        return self.enc(x).mean(dim=2)  # global pool (for clustering / quick probes)
 
 
 def _mask(x, mask_ratio, patch, rng):
@@ -71,7 +74,8 @@ class MAEClassifier:
     """SSL-pretrained classifier: masked-AE pretrain, then fine-tune enc + head."""
 
     def __init__(self, n_out, base=64, pretrain_epochs=30, finetune_epochs=30,
-                 batch_size=256, lr=1e-3, mask_ratio=0.5, patch=20, seed=0):
+                 batch_size=256, lr=1e-3, mask_ratio=0.5, patch=20, pool_out=8,
+                 dropout=0.3, seed=0):
         self.n_out = n_out
         self.base = base
         self.pretrain_epochs = pretrain_epochs
@@ -80,10 +84,32 @@ class MAEClassifier:
         self.lr = lr
         self.mask_ratio = mask_ratio
         self.patch = patch
+        self.pool_out = pool_out          # keep spatial detail in the clf head
+        self.dropout = dropout
         self.seed = seed
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.mae = None
         self.head = None
+
+    def _build_head(self):
+        # adaptive-pooled spatial head (NOT global mean) so peak positions survive
+        return nn.Sequential(
+            nn.AdaptiveAvgPool1d(self.pool_out), nn.Flatten(),
+            nn.Dropout(self.dropout),
+            nn.Linear(self.mae.embed_dim * self.pool_out, self.n_out),
+        ).to(self.device)
+
+    def save_encoder(self, path):
+        torch.save({"base": self.base, "n_in": self.n_in_,
+                    "state_dict": self.mae.state_dict()}, path)
+
+    def load_encoder(self, path):
+        ck = torch.load(path, map_location=self.device, weights_only=False)
+        self.base = ck["base"]
+        self.n_in_ = ck["n_in"]
+        self.mae = SpectralMAE(self.n_in_, self.base).to(self.device)
+        self.mae.load_state_dict(ck["state_dict"])
+        return self
 
     def pretrain(self, X_unlabeled):
         torch.manual_seed(self.seed)
@@ -108,9 +134,9 @@ class MAEClassifier:
         return self
 
     def fit(self, X, y, epochs=None):
-        assert self.mae is not None, "call pretrain() before fit()"
+        assert self.mae is not None, "call pretrain() or load_encoder() before fit()"
         epochs = epochs or self.finetune_epochs
-        self.head = nn.Linear(self.mae.embed_dim, self.n_out).to(self.device)
+        self.head = self._build_head()
         Xt = torch.tensor(np.asarray(X, np.float32)).unsqueeze(1)
         yt = torch.tensor(np.asarray(y, np.int64))
         loader = DataLoader(TensorDataset(Xt, yt), batch_size=self.batch_size,
@@ -124,7 +150,7 @@ class MAEClassifier:
         for _ in range(epochs):
             for xb, yb in loader:
                 xb, yb = xb.to(self.device), yb.to(self.device)
-                logits = self.head(self.mae.embed(xb))
+                logits = self.head(self.mae.feature_map(xb))
                 loss = loss_fn(logits, yb)
                 opt.zero_grad()
                 loss.backward()
@@ -139,7 +165,8 @@ class MAEClassifier:
         out = []
         for i in range(0, len(Xt), 1024):
             b = Xt[i:i + 1024].to(self.device)
-            out.append(torch.softmax(self.head(self.mae.embed(b)), 1).cpu().numpy())
+            logits = self.head(self.mae.feature_map(b))
+            out.append(torch.softmax(logits, 1).cpu().numpy())
         return np.concatenate(out)
 
     def predict(self, X):

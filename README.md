@@ -13,6 +13,29 @@ No proprietary data is used. Everything here runs from openly-licensed datasets
 fetched by `scripts/download_data.py` (see [DATA_SOURCES.md](DATA_SOURCES.md)).
 Regenerate the figure above with `python scripts/infographic.py`.
 
+## Experiments & tests we run
+
+Every capability is a re-runnable experiment (one script -> CSV + plot in
+`benchmarks/`). This is the full matrix of what the repo tests and the headline
+result, so the thinking process is auditable end to end:
+
+| Experiment (`scripts/`) | What it tests | Headline result |
+|---|---|---|
+| `run_classification.py` | flat cross-domain baselines (LogReg/SVM/RF/1D-CNN), seed-variance bars | LogReg 0.474 (cross-domain; see domain shift) |
+| `run_domain_shift.py` | in-distribution vs cross-domain vs adapted (4 models) + temp-scaling + conformal | 1D-ResNet **0.940** in-dist -> 0.55 shift -> 0.76 adapted |
+| `run_sota_classification.py` | pretrain -> fine-tune -> heterogeneous ensemble + TTA | **0.862** (beats Ho 0.822 & SANet 0.861) |
+| `run_ssl_classification.py` | self-supervised masked-AE pretraining + fine-tuned ensemble | see SSL note (honest negative / improved variant) |
+| `run_quantification.py` | PLSR/PCR/SVR/kNN/RF/1D-CNN + SD-augmentation + CV | RandomForest **R²=0.848** |
+| `run_pipeline.py` | **unified sweep**: baseline x norm x SG-deriv x DR x model + HPO | ALS+L2+SG-d1+RF -> 0.792, **HPO 0.808** |
+| `run_openset.py` | reject unknown isolates (MSP / energy / Mahalanobis) | AUROC ~0.75, closed-set 0.81 |
+| `run_calibration_transfer.py` | guarded PDS transfer + jackknife+ intervals | guarded R²: PLSR 0.46 / SVR 0.50 / RF 0.63; coverage 0.95 |
+| `run_dimreduction.py` | PCA / t-SNE / UMAP / MDS / LDA + separability metric | LDA sil 0.71/kNN 0.98; t-SNE best *unsupervised* |
+| `run_pca_explore.py` | PCA scree + score plots (chemometric EDA) | spectral variance is low-dimensional |
+| `run_interpretability.py` | SHAP + Grad-CAM + Integrated Gradients attribution | bands at 785 / 1006 cm⁻¹ (DNA / Phe) |
+| `run_shap_overview.py` | per-class SHAP heatmap over all 30 isolates | yeasts key on 1047 cm⁻¹, bacteria on 785/1007 |
+| `plot_comparison.py`, `infographic.py` | cost-vs-quality Pareto + the hero figure | - |
+| `pytest` | **38 fast unit tests** of every module (no downloads/GPU) | all green in CI |
+
 ## Why this exists
 
 The mature open Raman packages (RamanSPy, rampy, SpectroChemPy, chemometrics
@@ -69,6 +92,14 @@ to ~50% *cross-domain* - the exact instrument/campaign shift the 2026 benchmark
 (arXiv:2601.16107) calls the field's #1 issue (they saw 99%→74%; here 94%→56%).
 Training on a small slice of the target campaign recovers most of it.
 
+The three columns are three train/test setups: **in-distribution** trains and
+tests on the *same* campaign (train on 80% of `reference`, test on its held-out
+20%) - the optimistic number most papers report; **cross-domain** trains on
+`reference` and tests on the *different* `test` campaign with no adaptation - the
+honest deployment number, which collapses; **adapted** first fine-tunes (or
+trains) on a small labelled slice of the target campaign (`finetune`) before
+testing on `test` - showing how much a few target-domain labels recover.
+
 | Model | in-distribution | cross-domain (shift) | adapted (+finetune) |
 |-------|----------------:|---------------------:|--------------------:|
 | **1D-ResNet** | **0.940** | 0.547 | 0.759 |
@@ -101,15 +132,15 @@ python scripts/run_pca_explore.py          # PCA score plots + scree (chemometri
 python scripts/run_interpretability.py     # SHAP per-wavenumber peak attribution
 ```
 
-Hyperparameter tuning (`raman_ml.tuning.tune`) supports grid / random / Optuna
-Bayesian search over any sklearn model. In a controlled comparison (no
-augmentation) it lifts SVR R² 0.59→0.72 and RF 0.62→0.71 over default
-hyperparameters. (The main benchmark instead boosts these models via
-SD-augmentation, which already lifts SVR to 0.83 - tuning and augmentation are
-alternative knobs, not additive here.)
+```bash
+python scripts/run_pipeline.py --tune      # unified sweep + HPO on the winner
+python scripts/run_dimreduction.py         # PCA/t-SNE/UMAP/MDS/LDA separability
+python scripts/run_shap_overview.py        # per-class SHAP heatmap (30 isolates)
+```
 
 Outputs (CSV + PNG) land in [`benchmarks/`](benchmarks/). The CNN/ResNet use the
-GPU automatically when available, else CPU.
+GPU automatically when available, else CPU. Hyperparameter tuning is detailed in
+[its own section](#hyperparameter-tuning-detail) below.
 
 ## Results
 
@@ -124,7 +155,22 @@ GPU automatically when available, else CPU.
 <td width="50%"><img src="benchmarks/plots/domain_shift.png" alt="domain shift" width="100%"><br><sub><b>Domain shift</b> &middot; in-distribution vs cross-domain vs adapted (the field's #1 problem)</sub></td>
 <td width="50%"><img src="benchmarks/plots/shap_classification.png" alt="SHAP peak attribution" width="100%"><br><sub><b>XAI</b> &middot; SHAP per-wavenumber attribution lands on real bands (785 / 1006 cm⁻¹)</sub></td>
 </tr>
+<tr>
+<td width="50%"><img src="benchmarks/plots/pipeline_sweep.png" alt="unified pipeline sweep" width="100%"><br><sub><b>Unified pipeline</b> &middot; 96-config sweep (baseline×norm×SG×DR×model); winner ALS+L2+SG-d1+RF</sub></td>
+<td width="50%"><img src="benchmarks/plots/calibration_transfer.png" alt="calibration transfer" width="100%"><br><sub><b>Calibration transfer</b> &middot; guarded PDS recovers cross-instrument accuracy without over-correcting</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="benchmarks/plots/dimreduction_bacteria.png" alt="dimensionality reduction" width="100%"><br><sub><b>Dimensionality reduction</b> &middot; PCA / t-SNE / UMAP / MDS / LDA, scored by class separability</sub></td>
+<td width="50%"><img src="benchmarks/plots/classification_confusion.png" alt="confusion matrix" width="100%"><br><sub><b>Confusion matrix</b> &middot; 30-class isolate predictions (row-normalised)</sub></td>
+</tr>
 </table>
+
+**Per-class diagnostic bands.** A per-class SHAP map over all 30 isolates shows
+*which* Raman regions distinguish each substance - the yeasts (*Candida*) key on
+the ~1047 cm⁻¹ carbohydrate/cell-wall band while bacteria key on 785 (DNA) and
+1007 cm⁻¹ (phenylalanine). Generate with `python scripts/run_shap_overview.py`.
+
+![per-class SHAP](benchmarks/plots/shap_classification_byclass.png)
 
 Regenerate every comparison plot with `python scripts/plot_comparison.py`.
 
@@ -164,10 +210,88 @@ detectors give real signal above chance, and the task being unsolved is exactly
 why it is a stated open problem.
 
 ### Calibration transfer (simulated secondary instrument)
-PDS recovers nonlinear models under instrument shift: SVR R² -0.03→0.48,
-RandomForest 0.39→0.61.
+Mean over 25 random splits (n=48 is tiny, so single splits are noisy). A model
+trained on the primary instrument degrades on the shifted secondary; **guarded
+PDS** (only transfer when it improves a held-out secondary check) recovers it
+without the over-correction that sinks unguarded PDS on shift-robust PLSR:
+
+The columns are R² (relative log10 concentration) on the test set under three
+conditions: **in-domain** trains and tests on the *primary* instrument (the
+ideal, no shift); **secondary (no transfer)** applies that same model to spectra
+from the *secondary* instrument as-is - performance drops because the instruments
+differ; **secondary (guarded PDS)** first maps the secondary spectra back onto
+the primary instrument with Piecewise Direct Standardization (a small banded
+transform fit from a few paired standards), applied only when it improves a
+held-out check - recovering most of the lost accuracy.
+
+| Model | in-domain | secondary (no transfer) | secondary (guarded PDS) |
+|-------|----------:|------------------------:|------------------------:|
+| RandomForest | 0.685 | 0.453 | **0.629** |
+| SVR-rbf | 0.513 | 0.041 | **0.500** |
+| PLSR | 0.579 | 0.366 | **0.463** |
 
 ![calibration transfer](benchmarks/plots/calibration_transfer.png)
+
+Jackknife+ prediction intervals reach **0.95 coverage** (target 0.90) after the
+finite-sample level correction.
+
+### Dimensionality reduction (which embedding separates the classes)
+`run_dimreduction.py` scores each 2-D embedding by two measures of how well it
+separates the classes (bacteria-ID, 8 isolates), both in [roughly 0, 1], higher =
+better: **silhouette** measures cluster geometry - how tight each class cluster is
+versus how far apart the clusters sit (1 = well-separated blobs, ~0 = overlapping);
+**kNN-acc** is the cross-validated accuracy of a k-nearest-neighbour classifier
+*using only the 2-D coordinates* - i.e. can a simple classifier recover the labels
+from the embedding alone.
+
+| Method | silhouette | kNN-acc |
+|--------|-----------:|--------:|
+| **LDA** (supervised) | 0.71 | 0.98 |
+| **t-SNE** (best unsupervised) | 0.20 | 0.77 |
+| UMAP | 0.09 | 0.69 |
+| PCA | 0.05 | 0.68 |
+| MDS | 0.02 | 0.55 |
+
+LDA wins outright (it uses labels); among the *unsupervised* methods **t-SNE**
+preserves bacterial class structure best. (Caveat: this measures recoverability
+of a fixed embedding, not generalisation - LDA's number is an upper bound.)
+
+![dimensionality reduction](benchmarks/plots/dimreduction_bacteria.png)
+
+### Unified pipeline: which combination actually wins
+`run_pipeline.py` sweeps the full grid (baseline x normalisation x SG-derivative
+x dimensionality-reduction x model, 96 pipelines) with leakage-safe CV and tunes
+the winner. Best combination on quantification:
+
+**ALS baseline + L2 norm + Savitzky-Golay 1st-derivative + RandomForest -> R²=0.792**,
+**HPO -> 0.808**. The SG derivative appears in nearly every top pipeline - the
+single most consistent lever once components are combined.
+
+Each bar in the plot is one pipeline, labelled `model|baseline|norm|sg|dr`:
+- **model** - `PLSR`, `SVR`, `RF` (RandomForest), `kNN`
+- **baseline** - baseline-removal method: `als`, `arpls`, `snip`
+- **norm** - per-spectrum normalisation: `l2` (unit length) or `snv` (standard normal variate)
+- **sg** - Savitzky-Golay step: `none` or `d1` (1st derivative)
+- **dr** - dimensionality reduction: `none` or `pca30` (PCA to 30 components)
+
+So the winning bar `RF|als|l2|d1|none` reads "RandomForest on ALS-baselined,
+L2-normalised, 1st-derivative spectra, no PCA".
+
+![pipeline sweep](benchmarks/plots/pipeline_sweep.png)
+
+### Hyperparameter tuning (detail)
+`raman_ml.tuning.tune(estimator, space, X, y, method=...)` wraps any scikit-learn
+estimator with three strategies:
+- **grid** (`GridSearchCV`) - exhaustive over a small discrete space;
+- **random** (`RandomizedSearchCV`) - good default for a few continuous params;
+- **bayes** (Optuna TPE) - sample-efficient; ranges given as `(low, high)`,
+  log-scaled automatically when they span >= 2 orders of magnitude.
+
+It returns the refit best estimator, best params, and the best CV score. Verified
+gains (no-augmentation CV): SVR R² 0.59 -> 0.72, RF 0.62 -> 0.71; and on the
+unified pipeline winner, RF 0.792 -> 0.808 (`n_estimators=420, max_depth=22,
+max_features=0.11`). Tuning and SD-augmentation are alternative knobs - the main
+benchmark uses augmentation (RF 0.848), so they are not stacked.
 
 ## How it works
 
@@ -224,10 +348,37 @@ See [`CLAUDE.md`](CLAUDE.md) for operating rules.
 ## Tests
 
 ```bash
-pytest -q          # 33 fast unit tests, no downloads / GPU needed
+pytest -q          # 37 fast unit tests, no downloads / GPU needed
 ```
 
 ## License
 
-Code: MIT (see [LICENSE](LICENSE)). Datasets retain their original licenses and
-are not redistributed here.
+Code: **AGPL-3.0-or-later** (see [LICENSE](LICENSE)). Datasets retain their
+original licenses and are not redistributed here.
+
+## Selected references
+
+Key works behind the methods (full cited synthesis in
+[`agent-memory/reference/sota-raman-ml.md`](agent-memory/reference/sota-raman-ml.md)).
+
+**Raman deep learning & benchmarks**
+- Ho et al., *Rapid identification of pathogenic bacteria using Raman spectroscopy and deep learning*, Nat. Commun. 2019 - the bacteria-ID dataset + 26-layer 1D-ResNet (82.2%).
+- *Benchmarking Deep Learning Models for Raman Spectroscopy Across Open-Source Datasets*, arXiv:2601.16107 (2026) - SANet 86.1%; documents the val->test distribution-shift gap.
+- Lebron et al., *Enhancing Open-World Bacterial Raman Spectra Identification...*, Chem. Biomed. Imaging 2024 - SE-ResNet ensemble 87.8% + open-set rejection.
+- Ibtehaz et al., *RamanNet*, Neural Comput. Appl. 2023; SMAE (masked-AE SSL), arXiv:2504.16130 (2025).
+
+**Open-source tooling**
+- Georgiev et al., *RamanSPy*, Anal. Chem. 2024; `pybaselines`; BoxSERS; rampy.
+
+**Uncertainty, OOD & transfer**
+- Romano et al., *Conformalized Quantile Regression*, NeurIPS 2019; Angelopoulos et al., *RAPS*, ICLR 2021; Barber et al., *jackknife+*, Ann. Stat. 2021.
+- Guo et al., *On Calibration of Modern Neural Networks* (temperature scaling), ICML 2017; Lakshminarayanan et al., *Deep Ensembles*, NeurIPS 2017.
+- Lee et al., *Mahalanobis OOD*, NeurIPS 2018; Liu et al., *Energy-based OOD Detection*, NeurIPS 2020; Hendrycks & Gimpel, *MSP baseline*, ICLR 2017.
+- Bouveresse & Massart, *Piecewise Direct Standardization*, 1996 (calibration transfer).
+
+**Preprocessing, features & augmentation**
+- Eilers & Boelens, *ALS baseline* 2005; Baek et al., *arPLS*, Analyst 2015; Zhang et al., *airPLS*, Analyst 2010; Lieber & Mahadevan-Jansen, *ModPoly* 2003; Zhao et al., *IModPoly* 2007; Whitaker & Hayes, *cosmic-ray removal* 2018.
+- Chong & Jun, *VIP* 2005; Yao et al., *C-Mixup*, NeurIPS 2022; Park et al., *SpecAugment*, Interspeech 2019.
+
+**Interpretability**
+- Sundararajan et al., *Integrated Gradients*, ICML 2017; Lundberg & Lee, *SHAP*, NeurIPS 2017; Selvaraju et al., *Grad-CAM*, ICCV 2017.

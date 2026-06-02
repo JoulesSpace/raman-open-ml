@@ -19,6 +19,38 @@ No proprietary data is used. Everything here runs from openly-licensed datasets
 fetched by `scripts/download_data.py` (see [DATA_SOURCES.md](DATA_SOURCES.md)).
 Regenerate the figure above with `python scripts/infographic.py`.
 
+## What is Raman spectroscopy (and how it shaped this repo)
+
+Shine a single-colour laser at a sample and a tiny fraction of the light scatters
+back at shifted wavelengths. Each shift (a "Raman shift", measured in cm<sup>-1</sup>)
+corresponds to a specific molecular vibration, so a spectrum is a row of **peaks
+at characteristic positions** - a molecular fingerprint. A few physical facts about
+that fingerprint drove almost every design decision here:
+
+- **Peak *positions* identify the substance.** Which bonds/vibrations are present
+  is characteristic of the molecule, so the *pattern* of peaks is a fingerprint.
+  This is why **classification** works at all, and why our per-wavenumber
+  explanations are interpretable: SHAP lands on real bands (785 cm<sup>-1</sup> DNA,
+  1006 cm<sup>-1</sup> phenylalanine) instead of arbitrary features.
+- **Peak *intensity* scales with how much is there.** Amount of analyte modulates
+  band height, which is the physical basis for **quantification** (regression of
+  concentration). Position answers *what*, intensity answers *how much* - hence the
+  two-task split.
+- **Discriminative information is *local*.** A class is defined by a handful of
+  narrow bands, not the global average. That is why 1-D CNNs (local receptive
+  fields) and Savitzky-Golay derivatives help, and why our self-supervised model
+  only worked once the head **kept the spatial feature map** instead of global-pooling
+  it away (0.36 to 0.711, see the SSL note).
+- **Real spectra carry non-chemical signal.** A broad, slowly-varying
+  **fluorescence background** sits under the sharp peaks (motivates baseline
+  correction: ALS/arPLS/SNIP), single-pixel **cosmic-ray spikes** corrupt
+  normalisation (motivates Whitaker-Hayes despiking), and overall **intensity
+  scales** drift between measurements (motivates SNV/MSC/L2 normalisation).
+- **The instrument is part of the measurement.** The same sample on a different
+  spectrometer produces a *shifted* spectrum, so a model trained on one setup
+  degrades on another. This is the domain-shift problem and the reason for the
+  calibration-transfer and domain-shift-aware parts of this repo.
+
 ## Experiments & tests we run
 
 Every capability is a re-runnable experiment (one script -> CSV + plot in

@@ -5,6 +5,8 @@ follows [Keep a Changelog](https://keepachangelog.com/); versions follow semver.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-06-02
+
 ### Added
 - Trustworthy-ML layer: conformal prediction (split + jackknife+ intervals,
   APS/RAPS sets), temperature scaling + ECE, deep ensembles, MC-dropout.
